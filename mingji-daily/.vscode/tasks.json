@@ -24,7 +24,7 @@
     {
       "label": "stop: vite (端口 1420)",
       "type": "shell",
-      "command": "powershell -NoProfile -Command \"Get-NetTCPConnection -LocalPort 1420 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }\"",
+      "command": "powershell -NoProfile -Command \"Get-NetTCPConnection -LocalPort 1420 -State Listen -ErrorAction SilentlyContinue | Where-Object { $_.OwningProcess } | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }\"",
       "presentation": { "reveal": "silent" }
     },
     {
