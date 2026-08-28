@@ -1,0 +1,31 @@
+[package]
+name = "mingji-daily"
+version = "1.0.1"
+description = "铭记日常 - 本地记账软件"
+authors = ["Mingji"]
+edition = "2021"
+
+[lib]
+name = "mingji_daily_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["protocol-asset"] }
+tauri-plugin-opener = "2"
+tauri-plugin-dialog = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+rusqlite = { version = "0.32", features = ["bundled", "backup"] }
+image = { version = "0.25", default-features = false, features = ["jpeg", "png", "gif", "webp", "bmp"] }
+encoding_rs = "0.8"
+base64 = "0.22"
+md5 = "0.7"
+
+[profile.release]
+strip = true
+lto = true
+codegen-units = 1
+panic = "abort"

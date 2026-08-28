@@ -1,0 +1,21 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "铭记日常：调试（Rust 断点 + 前端热更新）",
+      "cargo": {
+        "args": [
+          "build",
+          "--manifest-path=./src-tauri/Cargo.toml",
+          "--no-default-features"
+        ],
+        "filter": { "name": "mingji-daily", "kind": "bin" }
+      },
+      "cwd": "${workspaceFolder}",
+      "preLaunchTask": "dev: vite 后台 (调试用)",
+      "postDebugTask": "stop: vite (端口 1420)"
+    }
+  ]
+}

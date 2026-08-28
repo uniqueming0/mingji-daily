@@ -1,0 +1,16 @@
+# 工作区（DSH 环境文件，非项目内容）
+.dsh/
+.npm-cache/
+node_modules/
+deep-whale-day-night-theme/
+微信读书笔记.md
+
+# 构建产物与本地数据
+mingji-daily/node_modules/
+mingji-daily/dist/
+mingji-daily/release/
+mingji-daily/src-tauri/target/
+mingji-daily/src-tauri/gen/
+mingji-daily/.npm-cache/
+mingji-daily/data/
+*.log

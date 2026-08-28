@@ -1,0 +1,151 @@
+:root {
+  --primary: #00b578;
+  --primary-pressed: #009a66;
+  --primary-light: #e6f7f0;
+  --expense: #f5483b;
+  --income: #00b578;
+  --warning: #ff8a00;
+  --text-1: #1f2329;
+  --text-2: #5c6370;
+  --text-3: #9aa0a8;
+  --text-4: #c4c9cf;
+  --line: #eceef1;
+  --bg: #f5f6f8;
+  --card: #ffffff;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+}
+
+body {
+  font-family: "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+  color: var(--text-1);
+  background: var(--bg);
+  font-size: 14px;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: inherit;
+}
+
+input,
+select,
+textarea {
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--text-1);
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 12px;
+  outline: none;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--primary);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 18px;
+  border-radius: 18px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.15s;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background: var(--primary-pressed);
+}
+
+.btn-primary:disabled {
+  background: var(--text-4);
+  cursor: not-allowed;
+}
+
+.btn-ghost {
+  background: #fff;
+  border: 1px solid var(--primary);
+  color: var(--primary);
+}
+
+.btn-ghost:hover {
+  background: var(--primary-light);
+}
+
+.btn-danger-ghost {
+  background: #fff;
+  border: 1px solid var(--expense);
+  color: var(--expense);
+}
+
+.btn-text {
+  color: var(--primary);
+  padding: 0 8px;
+  height: 28px;
+}
+
+.btn-text:hover {
+  color: var(--primary-pressed);
+}
+
+.btn-danger-text {
+  color: var(--expense);
+  padding: 0 8px;
+  height: 28px;
+}
+
+.card {
+  background: var(--card);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 14px;
+  border-radius: 16px;
+  background: #fff;
+  border: 1px solid var(--line);
+  color: var(--text-2);
+  font-size: 13px;
+  transition: all 0.15s;
+}
+
+.chip:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.chip.active {
+  background: var(--primary-light);
+  border-color: var(--primary);
+  color: var(--primary);
+  font-weight: 600;
+}
