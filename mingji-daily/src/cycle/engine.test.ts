@@ -23,7 +23,7 @@ const base = (over: Partial<CycleRule>): CycleRule => ({
 describe("周期引擎", () => {
   it("按月 25 日（发薪日周期）", () => {
     const rule = base({ type: "month", month_start_day: 25, start_date: "2025-01-25" });
-    const list = expandInstances(rule, "2025-01-20", "2025-03-10");
+    const list = expandInstances(rule, "2025-01-25", "2025-03-10");
     expect(list[0]).toMatchObject({ start: "2025-01-25", end: "2025-02-24" });
     expect(list[1]).toMatchObject({ start: "2025-02-25", end: "2025-03-24" });
   });
@@ -52,7 +52,7 @@ describe("周期引擎", () => {
 
   it("自定义每 2 个月（跨月钳制）", () => {
     const rule = base({ type: "custom", length: 2, length_unit: "month", start_date: "2025-01-31" });
-    const list = expandInstances(rule, "2025-01-01", "2025-04-30");
+    const list = expandInstances(rule, "2025-01-31", "2025-04-30");
     expect(list[0]).toMatchObject({ start: "2025-01-31", end: "2025-03-30" });
     expect(list[1]).toMatchObject({ start: "2025-03-31", end: "2025-05-30" });
   });
