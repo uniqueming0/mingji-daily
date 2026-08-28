@@ -26,12 +26,14 @@ if (-not (Test-Path $keyPath)) {
 Write-Host "读取公钥..." -ForegroundColor Cyan
 Push-Location $root
 try {
-    $pub = (npm run tauri signer pubkey -- -w $keyPath 2>&1 | Out-String).Trim()
+    $out = npm run tauri signer pubkey -- -w $keyPath 2>&1 | Out-String
 } finally {
     Pop-Location
 }
-if (-not $pub -or $pub -notmatch "^[A-Za-z0-9+/=]+$") {
-    Write-Host "公钥输出异常：$pub"
+$match = [regex]::Match($out, '(?m)^[A-Za-z0-9+/=]{40,}\s*$')
+$pub = $match.Value.Trim()
+if (-not $pub) {
+    Write-Host "公钥输出异常：$out"
     throw "公钥读取失败"
 }
 
