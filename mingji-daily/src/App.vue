@@ -98,7 +98,7 @@ async function dismissCrash() {
           <span class="icon">{{ item.icon }}</span>{{ item.name }}
         </button>
       </nav>
-      <div class="sidebar-footer">v1.0.1 · 数据仅保存在本机</div>
+      <div class="sidebar-footer">v1.2.1 · 数据仅保存在本机</div>
     </aside>
 
     <main class="content">

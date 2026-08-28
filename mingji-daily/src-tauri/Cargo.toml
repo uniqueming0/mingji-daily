@@ -1,6 +1,6 @@
 [package]
 name = "mingji-daily"
-version = "1.0.1"
+version = "1.2.1"
 description = "铭记日常 - 本地记账软件"
 authors = ["Mingji"]
 edition = "2021"
