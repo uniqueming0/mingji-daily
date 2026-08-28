@@ -123,3 +123,9 @@ export interface ExportResult {
   count: number;
   path: string;
 }
+
+export interface AppInfo {
+  version: string;
+  name: string;
+  os: string;
+}

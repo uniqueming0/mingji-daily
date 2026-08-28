@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch, type Component } from "vue";
+import { api } from "./api";
 import { bootstrap, navRequest, store } from "./store";
 import { toast, toasts } from "./toast";
+import { copyText } from "./utils/clipboard";
 import RecordView from "./views/RecordView.vue";
 import BillsView from "./views/BillsView.vue";
 import StatsView from "./views/StatsView.vue";
@@ -27,6 +29,7 @@ const nav: NavItem[] = [
 ];
 
 const active = ref("记一笔");
+const crashReport = ref<string | null>(null);
 const current = computed(() => nav.find((n) => n.name === active.value)?.comp);
 
 // 统计页穿透 → 切到明细页
@@ -43,7 +46,27 @@ onMounted(async () => {
   } catch (e) {
     toast.error(String(e));
   }
+  // 检测上次是否异常退出（崩溃报告）
+  try {
+    crashReport.value = await api.getPendingCrash();
+  } catch {
+    /* 忽略 */
+  }
 });
+
+async function copyCrash() {
+  const ok = await copyText(crashReport.value ?? "");
+  toast.success(ok ? "已复制，请粘贴到反馈群" : "复制失败，请手动全选复制");
+}
+
+async function dismissCrash() {
+  crashReport.value = null;
+  try {
+    await api.dismissPendingCrash();
+  } catch {
+    /* 忽略 */
+  }
+}
 </script>
 
 <template>
@@ -71,6 +94,19 @@ onMounted(async () => {
       <div v-if="!store.ready" class="loading">加载中…</div>
       <component :is="current" v-else />
     </main>
+
+    <div v-if="crashReport" class="crash-overlay">
+      <div class="crash-modal card">
+        <h2>😥 检测到上次异常退出</h2>
+        <p>点击「复制报告」并把内容发送到反馈群，帮助开发者尽快修复问题。</p>
+        <textarea :value="crashReport" readonly rows="6"></textarea>
+        <div class="crash-actions">
+          <span class="spacer" />
+          <button class="btn btn-text" @click="dismissCrash">忽略</button>
+          <button class="btn btn-primary" @click="copyCrash">复制报告</button>
+        </div>
+      </div>
+    </div>
 
     <div class="toasts">
       <div v-for="t in toasts" :key="t.id" class="toast" :class="t.type">{{ t.text }}</div>
@@ -194,5 +230,48 @@ onMounted(async () => {
 
 .toast.info {
   border-left-color: var(--text-3);
+}
+
+.crash-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 300;
+}
+
+.crash-modal {
+  width: 520px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.crash-modal h2 {
+  font-size: 18px;
+}
+
+.crash-modal p {
+  color: var(--text-2);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.crash-modal textarea {
+  font-family: Consolas, monospace;
+  font-size: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px;
+  background: var(--bg);
+  resize: none;
+}
+
+.crash-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 </style>

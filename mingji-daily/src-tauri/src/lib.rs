@@ -13,6 +13,7 @@ use tauri::{Manager, State};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    install_panic_hook();
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
@@ -60,7 +61,10 @@ pub fn run() {
             get_orphan_media,
             clean_orphan_media,
             check_db_integrity,
-            migrate_data_dir
+            migrate_data_dir,
+            get_app_info,
+            get_pending_crash,
+            dismiss_pending_crash
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application")
@@ -1435,6 +1439,67 @@ fn migrate_data_dir(state: State<Db>, target: String) -> Result<String, String> 
         copy_dir_recursive(&src_media, &dst.join("media"))?;
     }
     Ok(dst.to_string_lossy().to_string())
+}
+
+// ---------- 崩溃捕获与反馈 ----------
+
+fn crash_log_dir() -> PathBuf {
+    db::resolve_data_dir().join("logs")
+}
+
+/// 安装 panic 钩子：崩溃时把报告落盘并留标记，下次启动时由前端询问用户
+fn install_panic_hook() {
+    let default = std::panic::take_hook();
+    std::panic::set_hook(Box::new(move |info| {
+        default(info);
+        let dir = crash_log_dir();
+        let _ = std::fs::create_dir_all(&dir);
+        let secs = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_secs())
+            .unwrap_or(0);
+        let log_path = dir.join(format!("crash-{}.log", secs));
+        let _ = std::fs::write(
+            &log_path,
+            format!("铭记日常崩溃报告\n时间戳: {}\n{}\n", secs, info),
+        );
+        let _ = std::fs::write(
+            dir.join("crash.pending"),
+            log_path.to_string_lossy().to_string(),
+        );
+    }));
+}
+
+#[tauri::command]
+fn get_pending_crash() -> Option<String> {
+    let dir = crash_log_dir();
+    let marker = dir.join("crash.pending");
+    let path = std::fs::read_to_string(&marker).ok()?;
+    std::fs::read_to_string(path.trim()).ok()
+}
+
+#[tauri::command]
+fn dismiss_pending_crash() -> Result<(), String> {
+    let dir = crash_log_dir();
+    let marker = dir.join("crash.pending");
+    if marker.exists() {
+        let path = std::fs::read_to_string(&marker).unwrap_or_default();
+        let _ = std::fs::remove_file(&marker);
+        if !path.trim().is_empty() {
+            let _ = std::fs::remove_file(path.trim());
+        }
+    }
+    Ok(())
+}
+
+#[tauri::command]
+fn get_app_info(app: tauri::AppHandle) -> AppInfo {
+    let pkg = app.package_info();
+    AppInfo {
+        version: pkg.version.to_string(),
+        name: pkg.name.to_string(),
+        os: std::env::consts::OS.to_string(),
+    }
 }
 
 fn lock<'a>(state: &'a State<'_, Db>) -> Result<std::sync::MutexGuard<'a, Connection>, String> {

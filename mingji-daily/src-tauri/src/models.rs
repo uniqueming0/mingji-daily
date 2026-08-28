@@ -160,3 +160,10 @@ pub struct ExportResult {
     pub count: i64,
     pub path: String,
 }
+
+#[derive(Serialize)]
+pub struct AppInfo {
+    pub version: String,
+    pub name: String,
+    pub os: String,
+}

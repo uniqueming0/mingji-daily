@@ -6,10 +6,12 @@ import { toast } from "../toast";
 import CategoriesView from "./CategoriesView.vue";
 import AccountsView from "./AccountsView.vue";
 import CycleRulesView from "./CycleRulesView.vue";
+import FeedbackModal from "../components/FeedbackModal.vue";
 
 const tab = ref<"general" | "categories" | "accounts" | "cycles">("general");
 const dataDir = ref("");
 const mediaUsage = ref<{ count: number; bytes: number } | null>(null);
+const showFeedback = ref(false);
 
 onMounted(async () => {
   try {
@@ -48,6 +50,7 @@ async function openDataDir() {
     <div v-if="tab === 'general'" class="card general">
       <p><b>数据目录：</b>{{ dataDir || "加载中…" }}</p>
       <button class="btn btn-ghost" @click="openDataDir">打开数据目录</button>
+      <button class="btn btn-ghost" @click="showFeedback = true">意见反馈</button>
       <p>
         <b>媒体附件：</b>{{
           mediaUsage ? `${mediaUsage.count} 个文件，共 ${fmtMB(mediaUsage.bytes)}` : "加载中…"
@@ -62,6 +65,8 @@ async function openDataDir() {
     <CategoriesView v-else-if="tab === 'categories'" />
     <AccountsView v-else-if="tab === 'accounts'" />
     <CycleRulesView v-else />
+
+    <FeedbackModal v-if="showFeedback" @close="showFeedback = false" />
   </div>
 </template>
 

@@ -1,6 +1,7 @@
 import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 import type {
   Account,
+  AppInfo,
   BackupInfo,
   Bill,
   BillFilter,
@@ -65,6 +66,10 @@ export const api = {
   cleanOrphanMedia: () => invoke<OrphanInfo>("clean_orphan_media"),
   checkDbIntegrity: () => invoke<string>("check_db_integrity"),
   migrateDataDir: (target: string) => invoke<string>("migrate_data_dir", { target }),
+
+  getAppInfo: () => invoke<AppInfo>("get_app_info"),
+  getPendingCrash: () => invoke<string | null>("get_pending_crash"),
+  dismissPendingCrash: () => invoke<void>("dismiss_pending_crash"),
 };
 
 /** 本地文件路径 → 可被 <img>/<video> 使用的 asset 协议 URL */
