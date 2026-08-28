@@ -14,3 +14,6 @@ mingji-daily/src-tauri/gen/
 mingji-daily/.npm-cache/
 mingji-daily/data/
 *.log
+
+# 工作区杂项
+/scripts/
