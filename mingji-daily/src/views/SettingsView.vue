@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
-import { openPath } from "@tauri-apps/plugin-opener";
+import { openPath, openUrl } from "@tauri-apps/plugin-opener";
+import { check } from "@tauri-apps/plugin-updater";
 import { api } from "../api";
 import { toast } from "../toast";
 import CategoriesView from "./CategoriesView.vue";
@@ -12,6 +13,7 @@ const tab = ref<"general" | "categories" | "accounts" | "cycles">("general");
 const dataDir = ref("");
 const mediaUsage = ref<{ count: number; bytes: number } | null>(null);
 const showFeedback = ref(false);
+const checkingUpdate = ref(false);
 
 onMounted(async () => {
   try {
@@ -34,6 +36,31 @@ async function openDataDir() {
     toast.error(String(e));
   }
 }
+
+async function checkUpdate() {
+  checkingUpdate.value = true;
+  try {
+    const update = await check();
+    if (!update) {
+      toast.success("已是最新版本");
+      return;
+    }
+    if (!confirm(`发现新版本 v${update.version}，是否下载并安装？`)) return;
+    toast.info("正在下载更新，请稍候…");
+    await update.downloadAndInstall();
+    toast.success("更新已安装，应用即将重启");
+  } catch (e) {
+    // 便携版不支持自动更新 / 开发环境未签名
+    toast.info("当前版本不支持自动更新，将打开下载页");
+    try {
+      await openUrl("https://github.com/uniqueming0/mingji-daily/releases");
+    } catch {
+      /* 忽略 */
+    }
+  } finally {
+    checkingUpdate.value = false;
+  }
+}
 </script>
 
 <template>
@@ -50,6 +77,9 @@ async function openDataDir() {
     <div v-if="tab === 'general'" class="card general">
       <p><b>数据目录：</b>{{ dataDir || "加载中…" }}</p>
       <button class="btn btn-ghost" @click="openDataDir">打开数据目录</button>
+      <button class="btn btn-ghost" :disabled="checkingUpdate" @click="checkUpdate">
+        {{ checkingUpdate ? "检查中…" : "检查更新" }}
+      </button>
       <button class="btn btn-ghost" @click="showFeedback = true">意见反馈</button>
       <p>
         <b>媒体附件：</b>{{

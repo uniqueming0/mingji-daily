@@ -47,5 +47,13 @@
         "type": "embedBootstrapper"
       }
     }
+  },
+  "plugins": {
+    "updater": {
+      "endpoints": [
+        "https://github.com/uniqueming0/mingji-daily/releases/latest/download/latest.json"
+      ],
+      "pubkey": ""
+    }
   }
 }

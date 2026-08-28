@@ -9,12 +9,14 @@
     "preview": "vite preview",
     "tauri": "tauri",
     "test": "vitest run",
-    "package": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/package.ps1"
+    "package": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/package.ps1",
+    "publish": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/publish.ps1"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.9.0",
     "@tauri-apps/plugin-opener": "^2.0.0",
     "@tauri-apps/plugin-dialog": "^2.0.0",
+    "@tauri-apps/plugin-updater": "^2.0.0",
     "echarts": "^5.6.0",
     "mammoth": "^1.8.0",
     "vue": "^3.5.18"

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch, type Component } from "vue";
+import { check } from "@tauri-apps/plugin-updater";
 import { api } from "./api";
 import { bootstrap, navRequest, store } from "./store";
 import { toast, toasts } from "./toast";
@@ -51,6 +52,16 @@ onMounted(async () => {
     crashReport.value = await api.getPendingCrash();
   } catch {
     /* 忽略 */
+  }
+  // 静默检查更新（安装版；便携版/开发环境自动忽略）
+  try {
+    const update = await check();
+    if (update && confirm(`发现新版本 v${update.version}，是否更新？`)) {
+      toast.info("正在下载更新，请稍候…");
+      await update.downloadAndInstall();
+    }
+  } catch {
+    /* 便携版或开发环境，忽略 */
   }
 });
 

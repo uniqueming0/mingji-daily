@@ -17,6 +17,7 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .setup(|app| {
             let db = db::init()?;
             // 允许前端通过 asset 协议访问数据目录中的媒体文件（照片/视频）
