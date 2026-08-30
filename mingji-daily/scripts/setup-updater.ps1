@@ -27,18 +27,21 @@ try {
 }
 Write-Host "密钥已生成：$keyPath"
 
-# 公钥在 generate 的输出中打印，用正则从输出里提取（兼容不同 CLI 版本的措辞）
+# 公钥在 generate 的输出中打印。先去除 ANSI 颜色码（终端捕获时常见干扰），再提取
+$clean = $out -replace "\x1b\[[0-9;]*[A-Za-z]", ""
 $pub = $null
-$m = [regex]::Match($out, '(?im)public(?:\s+key)?[:\s=]+([A-Za-z0-9+/=]{40,})')
+$m = [regex]::Match($clean, '(?im)public(?:\s+key)?[:\s=]+([A-Za-z0-9+/=]{40,})')
 if ($m.Success) { $pub = $m.Groups[1].Value.Trim() }
 if (-not $pub) {
-    $m2 = [regex]::Match($out, '(?m)^([A-Za-z0-9+/=]{40,})\s*$')
+    $m2 = [regex]::Match($clean, '(?m)^([A-Za-z0-9+/=]{40,})\s*$')
     if ($m2.Success) { $pub = $m2.Groups[1].Value.Trim() }
 }
 if (-not $pub) {
-    Write-Host "生成输出："
-    Write-Host $out
-    throw "公钥提取失败，请把上面的输出发给开发者"
+    # 原始输出落盘，方便粘贴给开发者排查
+    $dbg = "$root\scripts\pubkey-debug.txt"
+    [System.IO.File]::WriteAllText($dbg, $out, (New-Object System.Text.UTF8Encoding($false)))
+    Write-Host "公钥提取失败。原始输出已保存到：$dbg"
+    throw "请把 $dbg 的内容发给开发者"
 }
 
 $confPath = "$root\src-tauri\tauri.conf.json"
