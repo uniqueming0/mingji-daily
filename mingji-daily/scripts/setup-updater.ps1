@@ -1,40 +1,44 @@
 ﻿# =============================================================
-# 自动更新签名密钥初始化（一次性）
-# 作用：生成签名密钥对（不存在时），并把公钥写入 tauri.conf.json
+# 自动更新签名密钥初始化
+# 作用：生成签名密钥对，并把公钥写入 tauri.conf.json
 # 运行：powershell -NoProfile -ExecutionPolicy Bypass -File scripts\setup-updater.ps1
-# 之后每次发布用 scripts\publish.ps1（自动带密钥签名）
+# 注意：每次运行都会重新生成密钥（发布过一次之后请勿重跑，否则旧用户无法验证更新）
 # =============================================================
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
 $keyPath = Join-Path $env:USERPROFILE ".tauri\mingji.key"
 $keyPassword = "mingji-daily"
 
-if (-not (Test-Path $keyPath)) {
-    Write-Host "生成签名密钥..." -ForegroundColor Cyan
-    Push-Location $root
-    try {
-        npm run tauri signer generate -- --password $keyPassword -w $keyPath
-        if ($LASTEXITCODE -ne 0) { throw "密钥生成失败" }
-    } finally {
-        Pop-Location
-    }
-    Write-Host "密钥已生成：$keyPath"
-} else {
-    Write-Host "密钥已存在：$keyPath"
+if (Test-Path $keyPath) {
+    Write-Host "检测到已存在的密钥（可能未成功写入公钥），删除后重新生成..." -ForegroundColor Yellow
+    Remove-Item $keyPath -Force
 }
 
-Write-Host "读取公钥..." -ForegroundColor Cyan
+Write-Host "生成签名密钥..." -ForegroundColor Cyan
 Push-Location $root
 try {
-    $out = npm run tauri signer pubkey -- -w $keyPath 2>&1 | Out-String
+    $out = npm run tauri signer generate -- --password $keyPassword -w $keyPath 2>&1 | Out-String
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host $out
+        throw "密钥生成失败"
+    }
 } finally {
     Pop-Location
 }
-$match = [regex]::Match($out, '(?m)^[A-Za-z0-9+/=]{40,}\s*$')
-$pub = $match.Value.Trim()
+Write-Host "密钥已生成：$keyPath"
+
+# 公钥在 generate 的输出中打印，用正则从输出里提取（兼容不同 CLI 版本的措辞）
+$pub = $null
+$m = [regex]::Match($out, '(?im)public(?:\s+key)?[:\s=]+([A-Za-z0-9+/=]{40,})')
+if ($m.Success) { $pub = $m.Groups[1].Value.Trim() }
 if (-not $pub) {
-    Write-Host "公钥输出异常：$out"
-    throw "公钥读取失败"
+    $m2 = [regex]::Match($out, '(?m)^([A-Za-z0-9+/=]{40,})\s*$')
+    if ($m2.Success) { $pub = $m2.Groups[1].Value.Trim() }
+}
+if (-not $pub) {
+    Write-Host "生成输出："
+    Write-Host $out
+    throw "公钥提取失败，请把上面的输出发给开发者"
 }
 
 $confPath = "$root\src-tauri\tauri.conf.json"
