@@ -17,3 +17,6 @@ mingji-daily/data/
 
 # 工作区杂项
 /scripts/
+
+# 调试输出
+mingji-daily/scripts/pubkey-debug.txt
