@@ -56,7 +56,9 @@ Remove-Item "$root\scripts\pubkey-debug.txt" -ErrorAction SilentlyContinue
 $confPath = "$root\src-tauri\tauri.conf.json"
 $conf = Get-Content $confPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $conf.plugins.updater.pubkey = $pub
-$conf | ConvertTo-Json -Depth 10 | Set-Content $confPath -Encoding UTF8
+# 注意：不能写 BOM（Rust 的 JSON 解析器会报错），用无 BOM UTF-8 写回
+$json = $conf | ConvertTo-Json -Depth 10
+[System.IO.File]::WriteAllText($confPath, $json, (New-Object System.Text.UTF8Encoding($false)))
 Write-Host "公钥已写入 tauri.conf.json" -ForegroundColor Green
 Write-Host ""
 Write-Host "初始化完成！后续发布直接运行：npm run publish"
