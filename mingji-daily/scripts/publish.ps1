@@ -10,7 +10,8 @@ $root = Split-Path -Parent $PSScriptRoot
 
 $keyPath = Join-Path $env:USERPROFILE ".tauri\mingji.key"
 if (-not (Test-Path $keyPath)) { throw "未找到签名密钥，请先运行 scripts\setup-updater.ps1" }
-# 本版 CLI 用 TAURI_SIGNING_PRIVATE_KEY_PATH 传密钥文件路径（KEY 变量是传内容）
+# bundler 需要 TAURI_SIGNING_PRIVATE_KEY（密钥内容字符串）；PATH 变量一并设置双保险
+$env:TAURI_SIGNING_PRIVATE_KEY = (Get-Content $keyPath -Raw).Trim()
 $env:TAURI_SIGNING_PRIVATE_KEY_PATH = $keyPath
 $env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD = "mingji-daily"
 
