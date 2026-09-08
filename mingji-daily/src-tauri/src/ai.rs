@@ -253,10 +253,11 @@ pub async fn set_ai_config(input: AiConfigInput) -> Result<AiConfigPublic, Strin
 
 #[tauri::command]
 pub async fn test_ai_connection() -> Result<String, String> {
+    // 注意：response_format=json_object 下输出被截断会返回 400，上限要给足
     let _ = call_deepseek(
         "你是连接测试助手。收到消息后只输出 {\"ok\": true}，不要输出其他内容。",
         "ping",
-        32,
+        256,
     )
     .await?;
     let cfg = load_config();
