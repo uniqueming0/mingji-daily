@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch, type Component } from "vue";
-import { check } from "@tauri-apps/plugin-updater";
+import { check, type Update } from "@tauri-apps/plugin-updater";
 import { api } from "./api";
 import { bootstrap, navRequest, store } from "./store";
 import { toast, toasts } from "./toast";
@@ -31,6 +31,7 @@ const nav: NavItem[] = [
 
 const active = ref("记一笔");
 const crashReport = ref<string | null>(null);
+const updateInfo = ref<{ version: string } | null>(null);
 const current = computed(() => nav.find((n) => n.name === active.value)?.comp);
 
 // 统计页穿透 → 切到明细页
@@ -54,16 +55,38 @@ onMounted(async () => {
     /* 忽略 */
   }
   // 静默检查更新（安装版；便携版/开发环境自动忽略）
+  // 注意：启动时没有用户手势，window.confirm 会被 WebView2 静默拒绝，
+  // 因此改用应用内自绘弹窗确认
   try {
     const update = await check();
-    if (update && confirm(`发现新版本 v${update.version}，是否更新？`)) {
-      toast.info("正在下载更新，请稍候…");
-      await update.downloadAndInstall();
+    if (update) {
+      pendingUpdate = update;
+      updateInfo.value = { version: update.version };
     }
   } catch {
     /* 便携版或开发环境，忽略 */
   }
 });
+
+let pendingUpdate: Update | null = null;
+
+function dismissUpdate() {
+  updateInfo.value = null;
+  pendingUpdate = null;
+}
+
+async function doUpdate() {
+  updateInfo.value = null;
+  const u = pendingUpdate;
+  pendingUpdate = null;
+  if (!u) return;
+  toast.info("正在下载更新，请稍候…");
+  try {
+    await u.downloadAndInstall();
+  } catch (e) {
+    toast.error(String(e));
+  }
+}
 
 async function copyCrash() {
   const ok = await copyText(crashReport.value ?? "");
@@ -115,6 +138,18 @@ async function dismissCrash() {
           <span class="spacer" />
           <button class="btn btn-text" @click="dismissCrash">忽略</button>
           <button class="btn btn-primary" @click="copyCrash">复制报告</button>
+        </div>
+      </div>
+    </div>
+
+    <div v-if="updateInfo" class="crash-overlay">
+      <div class="crash-modal card">
+        <h2>🎉 发现新版本 v{{ updateInfo.version }}</h2>
+        <p>是否现在下载并安装更新？安装完成后应用会自动重启。</p>
+        <div class="crash-actions">
+          <span class="spacer" />
+          <button class="btn btn-text" @click="dismissUpdate">稍后再说</button>
+          <button class="btn btn-primary" @click="doUpdate">立即更新</button>
         </div>
       </div>
     </div>
