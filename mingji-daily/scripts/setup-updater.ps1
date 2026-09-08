@@ -7,7 +7,7 @@
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
 $keyPath = Join-Path $env:USERPROFILE ".tauri\mingji.key"
-$keyPassword = "mingji-daily"
+$keyPassword = if ($env:MINGJI_SIGN_PASSWORD) { $env:MINGJI_SIGN_PASSWORD } else { "mingji-daily" }
 
 if (Test-Path $keyPath) {
     Write-Host "检测到已存在的密钥（可能未成功写入公钥），删除后重新生成..." -ForegroundColor Yellow

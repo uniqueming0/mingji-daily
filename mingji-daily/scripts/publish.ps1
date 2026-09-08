@@ -10,10 +10,12 @@ $root = Split-Path -Parent $PSScriptRoot
 
 $keyPath = Join-Path $env:USERPROFILE ".tauri\mingji.key"
 if (-not (Test-Path $keyPath)) { throw "未找到签名密钥，请先运行 scripts\setup-updater.ps1" }
+# 签名密码：可用环境变量 MINGJI_SIGN_PASSWORD 覆盖（私钥才是关键，密码公开无实质风险，但建议覆盖）
+$keyPassword = if ($env:MINGJI_SIGN_PASSWORD) { $env:MINGJI_SIGN_PASSWORD } else { "mingji-daily" }
 # bundler 需要 TAURI_SIGNING_PRIVATE_KEY（密钥内容字符串）；PATH 变量一并设置双保险
 $env:TAURI_SIGNING_PRIVATE_KEY = (Get-Content $keyPath -Raw).Trim()
 $env:TAURI_SIGNING_PRIVATE_KEY_PATH = $keyPath
-$env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD = "mingji-daily"
+$env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD = $keyPassword
 
 # 1) 打包（自动对安装包签名，生成 .sig）
 Write-Host "[1/3] 打包（含签名）..." -ForegroundColor Cyan
@@ -57,8 +59,13 @@ $latest = @{
 $latestPath = Join-Path $releaseDir "latest.json"
 [System.IO.File]::WriteAllText($latestPath, $latest, (New-Object System.Text.UTF8Encoding($false)))
 
-# 3) 发布到 GitHub Releases
-Write-Host "[3/3] 发布到 GitHub Releases..." -ForegroundColor Cyan
+# 3) 安全自检 + 发布到 GitHub Releases
+Write-Host "[3/3] 安全自检并发布到 GitHub Releases..." -ForegroundColor Cyan
+$sensitive = @(Get-ChildItem $releaseDir -Recurse -File -ErrorAction SilentlyContinue |
+    Where-Object { $_.Name -eq "config.json" -or $_.Extension -in @(".key", ".pem") })
+if ($sensitive.Count -gt 0) {
+    throw "检测到敏感文件混入发布目录，已中止发布：" + ($sensitive.FullName -join "、")
+}
 $zipPath = Join-Path $releaseDir "${productName}-便携版-v${version}-win-x64.zip"
 $gh = Get-Command gh -ErrorAction SilentlyContinue
 if ($gh) {
