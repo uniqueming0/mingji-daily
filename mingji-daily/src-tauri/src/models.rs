@@ -186,6 +186,7 @@ pub struct AppInfo {
 }
 
 #[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct AiConfigPublic {
     pub enabled: bool,
     pub has_key: bool,
