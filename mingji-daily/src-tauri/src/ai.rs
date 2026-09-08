@@ -253,9 +253,9 @@ pub async fn set_ai_config(input: AiConfigInput) -> Result<AiConfigPublic, Strin
 
 #[tauri::command]
 pub async fn test_ai_connection() -> Result<String, String> {
-    // 注意：response_format=json_object 下输出被截断会返回 400，上限要给足
+    // 注意：response_format=json_object 要求提示词包含 "json" 字样，且输出截断会返回 400
     let _ = call_deepseek(
-        "你是连接测试助手。收到消息后只输出 {\"ok\": true}，不要输出其他内容。",
+        "你是连接测试助手。收到消息后只输出以下 JSON，不要输出其他内容：{\"ok\": true}",
         "ping",
         256,
     )
