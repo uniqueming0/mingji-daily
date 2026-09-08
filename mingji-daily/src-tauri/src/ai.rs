@@ -314,10 +314,12 @@ pub async fn ai_generate(
     if !cfg.enabled {
         return Err("AI 功能未开启（设置 → AI 智能服务）".into());
     }
-    let db: &crate::db::Db = &state;
-    let conn = db.0.lock().map_err(|e| e.to_string())?;
-    let aggregated = aggregate_cycles(&conn, &cycles)?;
-    drop(conn);
+    // 锁必须放在独立作用域内，块结束时立即释放，不能跨过下面的 .await（Send 约束）
+    let aggregated = {
+        let db: &crate::db::Db = &state;
+        let conn = db.0.lock().map_err(|e| e.to_string())?;
+        aggregate_cycles(&conn, &cycles)?
+    };
     let (system, max_tokens) = match feature.as_str() {
         "report" => (REPORT_SYSTEM, 2048u32),
         "savings" => (SAVINGS_SYSTEM, 2048),
