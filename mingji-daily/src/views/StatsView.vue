@@ -6,7 +6,8 @@ import { toast } from "../toast";
 import { categoryName, gotoBills, store } from "../store";
 import { addMonthsClamped, expandInstances, instanceContaining } from "../cycle/engine";
 import { fenToYuan, todayStr } from "../utils/format";
-import type { Bill, CycleInstance, CycleRule } from "../types";
+import type { Bill, CycleInstance, CycleRange, CycleRule } from "../types";
+import AiPanel from "../components/AiPanel.vue";
 
 // ---------- 周期切换 ----------
 const ruleId = ref<number | null>(null);
@@ -16,6 +17,7 @@ const rule = computed<CycleRule | null>(
 );
 
 const curIndex = ref(0);
+const showAi = ref(false);
 
 const instanceList = computed<CycleInstance[]>(() => {
   if (!rule.value) return [];
@@ -40,6 +42,16 @@ function goToToday() {
 }
 // 注意：必须先注册 goToToday，再注册 load 监听（首次立即执行顺序依赖）
 watch(rule, goToToday, { immediate: true });
+
+// AI 分析用：最近 3 个周期（当前 + 前两个）
+const aiCycles = computed<CycleRange[]>(() => {
+  const out: CycleRange[] = [];
+  for (let i = 0; i < 3; i++) {
+    const ins = instanceList.value[curIndex.value - i];
+    if (ins) out.push({ start: ins.start, end: ins.end });
+  }
+  return out;
+});
 
 // ---------- 数据加载 ----------
 const bills = ref<Bill[]>([]);
@@ -312,6 +324,7 @@ function drill(c: CatStat, billType: 1 | 2) {
           下一周期 ▶
         </button>
         <button class="btn btn-text" @click="goToToday">回到本期</button>
+        <button class="btn btn-primary small" @click="showAi = true">✨ AI 分析</button>
       </div>
     </div>
 
@@ -432,6 +445,8 @@ function drill(c: CatStat, billType: 1 | 2) {
         </div>
       </div>
     </template>
+
+    <AiPanel v-if="showAi" :cycles="aiCycles" @close="showAi = false" />
   </div>
 </template>
 

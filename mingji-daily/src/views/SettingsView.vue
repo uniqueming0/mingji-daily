@@ -7,9 +7,10 @@ import { toast } from "../toast";
 import CategoriesView from "./CategoriesView.vue";
 import AccountsView from "./AccountsView.vue";
 import CycleRulesView from "./CycleRulesView.vue";
+import AiSettingsView from "./AiSettingsView.vue";
 import FeedbackModal from "../components/FeedbackModal.vue";
 
-const tab = ref<"general" | "categories" | "accounts" | "cycles">("general");
+const tab = ref<"general" | "categories" | "accounts" | "cycles" | "ai">("general");
 const dataDir = ref("");
 const mediaUsage = ref<{ count: number; bytes: number } | null>(null);
 const showFeedback = ref(false);
@@ -72,6 +73,7 @@ async function checkUpdate() {
       <button class="chip" :class="{ active: tab === 'categories' }" @click="tab = 'categories'">分类管理</button>
       <button class="chip" :class="{ active: tab === 'accounts' }" @click="tab = 'accounts'">账户管理</button>
       <button class="chip" :class="{ active: tab === 'cycles' }" @click="tab = 'cycles'">周期管理</button>
+      <button class="chip" :class="{ active: tab === 'ai' }" @click="tab = 'ai'">AI 智能服务</button>
     </div>
 
     <div v-if="tab === 'general'" class="card general">
@@ -94,7 +96,8 @@ async function checkUpdate() {
 
     <CategoriesView v-else-if="tab === 'categories'" />
     <AccountsView v-else-if="tab === 'accounts'" />
-    <CycleRulesView v-else />
+    <CycleRulesView v-else-if="tab === 'cycles'" />
+    <AiSettingsView v-else />
 
     <FeedbackModal v-if="showFeedback" @close="showFeedback = false" />
   </div>

@@ -1,6 +1,8 @@
 import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 import type {
   Account,
+  AiConfig,
+  AiParsedLine,
   AppInfo,
   BackupInfo,
   Bill,
@@ -9,6 +11,7 @@ import type {
   Bootstrap,
   Category,
   ConfirmImportInput,
+  CycleRange,
   CycleRule,
   CycleRuleInput,
   ExportResult,
@@ -70,6 +73,17 @@ export const api = {
   getAppInfo: () => invoke<AppInfo>("get_app_info"),
   getPendingCrash: () => invoke<string | null>("get_pending_crash"),
   dismissPendingCrash: () => invoke<void>("dismiss_pending_crash"),
+
+  getAiConfig: () => invoke<AiConfig>("get_ai_config"),
+  setAiConfig: (input: {
+    enabled?: boolean | null;
+    apiKey?: string | null;
+    model?: string | null;
+  }) => invoke<AiConfig>("set_ai_config", { input }),
+  testAiConnection: () => invoke<string>("test_ai_connection"),
+  aiParseLines: (lines: string[]) => invoke<AiParsedLine[]>("ai_parse_lines", { lines }),
+  aiGenerate: (feature: string, cycles: CycleRange[]) =>
+    invoke<string>("ai_generate", { feature, cycles }),
 };
 
 /** 本地文件路径 → 可被 <img>/<video> 使用的 asset 协议 URL */

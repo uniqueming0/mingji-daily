@@ -4,7 +4,7 @@ import { open } from "@tauri-apps/plugin-dialog";
 import mammoth from "mammoth";
 import { api } from "../api";
 import { toast } from "../toast";
-import { childrenOf, store, topCategories } from "../store";
+import { aiConfig, childrenOf, refreshAiConfig, store, topCategories } from "../store";
 import {
   applyCustomRule,
   extractYearRangeFromText,
@@ -105,13 +105,61 @@ function applyRules() {
   toast.success(fixed ? `自定义规则补全了 ${fixed} 行` : "没有行匹配自定义规则");
 }
 
+// ---------- AI 智能识别失败行 ----------
+const aiBusy = ref(false);
+
+function findCategoryId(name: string): number | null {
+  return store.categories.find((x) => x.name === name && x.status === 1)?.id ?? null;
+}
+
+function defaultOtherId(): number | null {
+  return store.categories.find((x) => x.name === "其他")?.id ?? null;
+}
+
+async function aiParse() {
+  const failed = rows.value.filter((r) => !r.ok);
+  if (!failed.length) {
+    toast.info("没有失败行");
+    return;
+  }
+  aiBusy.value = true;
+  try {
+    const items = await api.aiParseLines(failed.map((r) => r.raw));
+    let fixed = 0;
+    for (let i = 0; i < failed.length && i < items.length; i++) {
+      const r = failed[i];
+      const p = items[i];
+      if (!p || !(p.amount > 0)) continue;
+      r.date = p.date || r.date;
+      r.amountStr = String(p.amount);
+      r.type = p.type === 2 ? 2 : 1;
+      const cid = findCategoryId(p.category);
+      if (cid) r.categoryId = cid;
+      if (r.categoryId == null) r.categoryId = defaultOtherId();
+      r.remark = p.remark || r.remark;
+      r.ok = true;
+      r.checked = true;
+      r.warn = "AI 识别";
+      fixed++;
+    }
+    toast.success(`AI 补全了 ${fixed} 行，请核对后勾选导入`);
+  } catch (e) {
+    toast.error(String(e));
+  } finally {
+    aiBusy.value = false;
+  }
+}
+
 const tops = computed(() => topCategories());
 const allCategories = computed(() => store.categories.filter((c) => c.status === 1));
 
 const checkedCount = computed(() => rows.value.filter((r) => r.checked).length);
 const okCount = computed(() => rows.value.filter((r) => r.ok).length);
 
-onMounted(loadTasks);
+onMounted(() => {
+  loadTasks();
+  refreshAiConfig();
+});
 
 async function loadTasks() {
   try {
@@ -385,6 +433,14 @@ async function revoke(task: ImportTask) {
             ＋ 添加规则
           </button>
           <button class="btn btn-primary" @click="applyRules">应用规则</button>
+          <button
+            v-if="aiConfig.enabled"
+            class="btn btn-primary"
+            :disabled="aiBusy"
+            @click="aiParse"
+          >
+            {{ aiBusy ? "AI 识别中…" : "🤖 AI 识别失败行" }}
+          </button>
         </div>
         <div v-for="(rule, i) in customRules" :key="i" class="rule-row">
           <input v-model="rule.name" class="r-name" placeholder="规则名" @change="saveRules" />

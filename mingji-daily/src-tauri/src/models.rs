@@ -1,5 +1,22 @@
 use serde::{Deserialize, Serialize};
 
+#[derive(Serialize, Deserialize, Clone)]
+pub struct AiConfigStore {
+    pub enabled: bool,
+    pub api_key: String,
+    pub model: String,
+}
+
+impl Default for AiConfigStore {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            api_key: String::new(),
+            model: "deepseek-chat".into(),
+        }
+    }
+}
+
 #[derive(Serialize, Clone)]
 pub struct Category {
     pub id: i64,
@@ -166,4 +183,34 @@ pub struct AppInfo {
     pub version: String,
     pub name: String,
     pub os: String,
+}
+
+#[derive(Serialize)]
+pub struct AiConfigPublic {
+    pub enabled: bool,
+    pub has_key: bool,
+    pub model: String,
+}
+
+#[derive(Deserialize)]
+pub struct AiConfigInput {
+    pub enabled: Option<bool>,
+    pub api_key: Option<String>,
+    pub model: Option<String>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct AiParsedLine {
+    pub line: i64,
+    pub date: String,
+    pub amount: f64,
+    pub r#type: i64,
+    pub category: String,
+    pub remark: String,
+}
+
+#[derive(Deserialize)]
+pub struct CycleRange {
+    pub start: String,
+    pub end: String,
 }

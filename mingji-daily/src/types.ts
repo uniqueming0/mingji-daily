@@ -129,3 +129,23 @@ export interface AppInfo {
   name: string;
   os: string;
 }
+
+export interface AiConfig {
+  enabled: boolean;
+  hasKey: boolean;
+  model: string;
+}
+
+export interface AiParsedLine {
+  line: number;
+  date: string;
+  amount: number;
+  type: 1 | 2;
+  category: string;
+  remark: string;
+}
+
+export interface CycleRange {
+  start: string;
+  end: string;
+}

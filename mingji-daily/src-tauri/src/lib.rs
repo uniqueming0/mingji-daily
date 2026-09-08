@@ -1,3 +1,4 @@
+mod ai;
 mod db;
 mod models;
 
@@ -65,7 +66,12 @@ pub fn run() {
             migrate_data_dir,
             get_app_info,
             get_pending_crash,
-            dismiss_pending_crash
+            dismiss_pending_crash,
+            ai::get_ai_config,
+            ai::set_ai_config,
+            ai::test_ai_connection,
+            ai::ai_parse_lines,
+            ai::ai_generate
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application")

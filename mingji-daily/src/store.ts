@@ -1,6 +1,6 @@
 import { reactive } from "vue";
 import { api } from "./api";
-import type { Account, Category, CycleRule } from "./types";
+import type { Account, AiConfig, Category, CycleRule } from "./types";
 
 export const store = reactive({
   ready: false,
@@ -8,6 +8,19 @@ export const store = reactive({
   accounts: [] as Account[],
   cycleRules: [] as CycleRule[],
 });
+
+export const aiConfig = reactive<AiConfig>({ enabled: false, hasKey: false, model: "deepseek-chat" });
+
+export async function refreshAiConfig() {
+  try {
+    const cfg = await api.getAiConfig();
+    aiConfig.enabled = cfg.enabled;
+    aiConfig.hasKey = cfg.hasKey;
+    aiConfig.model = cfg.model;
+  } catch {
+    /* 忽略 */
+  }
+}
 
 export async function bootstrap() {
   const data = await api.bootstrap();
