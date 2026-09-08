@@ -30,7 +30,7 @@ async function saveKey() {
     return;
   }
   try {
-    const cfg = await api.setAiConfig({ apiKey: keyInput.value.trim() });
+    const cfg = await api.setAiConfig({ api_key: keyInput.value.trim() });
     aiConfig.hasKey = cfg.hasKey;
     keyInput.value = "";
     keySaved.value = cfg.hasKey;
@@ -43,7 +43,7 @@ async function saveKey() {
 async function clearKey() {
   if (!confirm("确定删除已保存的 API Key 吗？")) return;
   try {
-    const cfg = await api.setAiConfig({ apiKey: "" });
+    const cfg = await api.setAiConfig({ api_key: "" });
     aiConfig.hasKey = cfg.hasKey;
     keySaved.value = false;
     toast.success("Key 已删除");

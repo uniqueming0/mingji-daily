@@ -77,7 +77,7 @@ export const api = {
   getAiConfig: () => invoke<AiConfig>("get_ai_config"),
   setAiConfig: (input: {
     enabled?: boolean | null;
-    apiKey?: string | null;
+    api_key?: string | null;
     model?: string | null;
   }) => invoke<AiConfig>("set_ai_config", { input }),
   testAiConnection: () => invoke<string>("test_ai_connection"),
