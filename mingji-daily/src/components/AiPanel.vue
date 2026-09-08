@@ -14,11 +14,11 @@ const generating = ref(false);
 const result = ref<any>(null);
 const error = ref("");
 
-const tabNames: Record<Tab, { label: string; icon: string }> = {
-  report: { label: "周期报告", icon: "📊" },
-  savings: { label: "省钱建议", icon: "💰" },
-  food: { label: "饮食推荐", icon: "🍽️" },
-};
+const tabs: Array<{ key: Tab; label: string; icon: string }> = [
+  { key: "report", label: "周期报告", icon: "📊" },
+  { key: "savings", label: "省钱建议", icon: "💰" },
+  { key: "food", label: "饮食推荐", icon: "🍽️" },
+];
 
 async function generate() {
   generating.value = true;
@@ -61,11 +61,11 @@ function feedback(useful: boolean) {
 
       <div class="tabs">
         <button
-          v-for="(t, key) in tabNames"
-          :key="key"
+          v-for="t in tabs"
+          :key="t.key"
           class="tab"
-          :class="{ active: tab === key }"
-          @click="tab = (key as Tab)"
+          :class="{ active: tab === t.key }"
+          @click="tab = t.key"
         >
           {{ t.icon }} {{ t.label }}
         </button>
