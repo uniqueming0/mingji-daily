@@ -90,7 +90,7 @@ function feedback(useful: boolean) {
         <!-- 省钱建议 -->
         <template v-else-if="tab === 'savings'">
           <div v-for="(s, i) in result.suggestions" :key="i" class="sug">
-            <div class="sug-title">{{ i + 1 }}. {{ s.title }}</div>
+            <div class="sug-title">{{ Number(i) + 1 }}. {{ s.title }}</div>
             <div class="sug-line">📊 依据：{{ s.basis }}</div>
             <div class="sug-line">🛠️ 怎么做：{{ s.action }}</div>
             <div class="sug-line expect">🎯 {{ s.expectation }}</div>
@@ -104,7 +104,7 @@ function feedback(useful: boolean) {
         <!-- 饮食推荐 -->
         <template v-else>
           <div v-for="(s, i) in result.suggestions" :key="i" class="sug">
-            <div class="sug-title">{{ i + 1 }}. {{ s.item }} → 推荐「{{ s.dish }}」</div>
+            <div class="sug-title">{{ Number(i) + 1 }}. {{ s.item }} → 推荐「{{ s.dish }}」</div>
             <div class="sug-line">📊 依据：{{ s.basis }}</div>
             <div class="sug-line">🍳 {{ s.recipe }}</div>
             <div class="sug-line expect">🎯 {{ s.expectation }}</div>
