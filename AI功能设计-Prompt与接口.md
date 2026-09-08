@@ -1430,4 +1430,16 @@ AI 输出 → 结构校验通过 → 提取用户可见文本（title/summary/co
 
 ---
 
+## 附：实战踩坑记录（桌面版 v1.3.0 已踩过，小程序版务必规避）
+
+1. **`response_format=json_object` 的两条硬性要求**：
+   - 提示词（messages 任意位置）必须包含 **"json"** 字样，否则接口直接返回 `400: Prompt must contain the word 'json' in some form to use 'response_format' of type 'json_object'`；
+   - `max_tokens` 必须给足，若输出 JSON 因上限被截断，接口返回 400（测试类短输出给 256 以上即可，业务输出 2048 起）。
+2. **Tauri IPC 命名规则（单向转换）**：
+   - 请求方向：命令**参数名**驼峰→下划线自动转换（`billId`→`bill_id`），但**嵌套对象字段不转换**，前端必须手写下划线（如 `api_key`）；
+   - 响应方向：字段名**完全不转换**，Rust 结构体需显式加 `#[serde(rename_all = "camelCase")]` 才能输出驼峰。
+3. **异步命令中不可跨 `.await` 持有 `MutexGuard`**（future 非 Send 编译错误）：把锁放进独立块级作用域，聚合完立即释放。
+
+---
+
 *本文档为开发可直接使用的详细设计；DeepSeek 参数与价格以官方当期文档为准，上线前需用真实计价复核 §6.1 估算值。*
