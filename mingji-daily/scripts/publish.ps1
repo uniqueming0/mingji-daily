@@ -69,8 +69,11 @@ if ($sensitive.Count -gt 0) {
 $zipPath = Join-Path $releaseDir "${productName}-便携版-v${version}-win-x64.zip"
 $gh = Get-Command gh -ErrorAction SilentlyContinue
 if ($gh) {
-    gh release create "v$version" $zipPath $asciiSetup $latestPath --title "铭记日常 v$version" --notes $Notes
-    if ($LASTEXITCODE -ne 0) { throw "gh 发布失败，请检查登录状态（gh auth login）" }
+    $ghOut = gh release create "v$version" $zipPath $asciiSetup $latestPath --title "铭记日常 v$version" --notes $Notes 2>&1 | Out-String
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host $ghOut
+        throw "gh 发布失败（具体原因见上方 gh 输出）"
+    }
     Write-Host ""
     Write-Host "发布完成！用户端将自动收到更新提示。" -ForegroundColor Green
 } else {
