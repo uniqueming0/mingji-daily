@@ -11,6 +11,19 @@ export const store = reactive({
 
 export const aiConfig = reactive<AiConfig>({ enabled: false, hasKey: false, model: "deepseek-chat" });
 
+/** 运行平台：windows / android / ios …（移动端隐藏桌面专属功能） */
+export const appEnv = reactive({ platform: "windows", isMobile: false });
+
+export async function loadPlatform() {
+  try {
+    const p = await api.getPlatform();
+    appEnv.platform = p;
+    appEnv.isMobile = p === "android" || p === "ios";
+  } catch {
+    /* 忽略 */
+  }
+}
+
 export async function refreshAiConfig() {
   try {
     const cfg = await api.getAiConfig();

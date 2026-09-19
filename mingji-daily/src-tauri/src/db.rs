@@ -1,15 +1,30 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
-use std::sync::Mutex;
+use std::sync::{Mutex, OnceLock};
 
 use rusqlite::Connection;
 
 pub struct Db(pub Mutex<Connection>);
 
-/// 数据目录规则（对应 PRD FR-DIS-03 / FR-DIS-13 / FR-DIS-05）：
+/// 移动端（Android/iOS）由 setup 阶段显式设置应用私有数据目录；
+/// 桌面端不设置，走下面的便携版/安装版自动规则。
+static DATA_DIR: OnceLock<PathBuf> = OnceLock::new();
+
+pub fn set_data_dir(dir: PathBuf) {
+    let _ = DATA_DIR.set(dir);
+}
+
+pub fn resolve_data_dir() -> PathBuf {
+    if let Some(dir) = DATA_DIR.get() {
+        return dir.clone();
+    }
+    resolve_data_dir_desktop()
+}
+
+/// 桌面端数据目录规则（对应 PRD FR-DIS-03 / FR-DIS-13 / FR-DIS-05）：
 /// - 便携版：程序同目录 `data\`（整个文件夹拷贝即可搬家）
 /// - 安装版 / 运行于临时目录（未解压直接双击）：`%APPDATA%\铭记日常\`
-pub fn resolve_data_dir() -> PathBuf {
+fn resolve_data_dir_desktop() -> PathBuf {
     let exe_dir = std::env::current_exe()
         .ok()
         .and_then(|p| p.parent().map(|d| d.to_path_buf()))

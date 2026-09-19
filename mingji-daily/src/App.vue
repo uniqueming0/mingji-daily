@@ -2,7 +2,7 @@
 import { computed, onMounted, ref, watch, type Component } from "vue";
 import { check, type Update } from "@tauri-apps/plugin-updater";
 import { api } from "./api";
-import { bootstrap, navRequest, store } from "./store";
+import { appEnv, bootstrap, loadPlatform, navRequest, store } from "./store";
 import { toast, toasts } from "./toast";
 import { copyText } from "./utils/clipboard";
 import RecordView from "./views/RecordView.vue";
@@ -54,17 +54,21 @@ onMounted(async () => {
   } catch {
     /* 忽略 */
   }
-  // 静默检查更新（安装版；便携版/开发环境自动忽略）
+  // 运行平台（移动端隐藏桌面专属功能）
+  await loadPlatform();
+  // 静默检查更新（仅桌面端；移动端走应用商店/侧载更新）
   // 注意：启动时没有用户手势，window.confirm 会被 WebView2 静默拒绝，
   // 因此改用应用内自绘弹窗确认
-  try {
-    const update = await check();
-    if (update) {
-      pendingUpdate = update;
-      updateInfo.value = { version: update.version };
+  if (!appEnv.isMobile) {
+    try {
+      const update = await check();
+      if (update) {
+        pendingUpdate = update;
+        updateInfo.value = { version: update.version };
+      }
+    } catch {
+      /* 便携版或开发环境，忽略 */
     }
-  } catch {
-    /* 便携版或开发环境，忽略 */
   }
 });
 
@@ -319,5 +323,50 @@ async function dismissCrash() {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+/* ---------- 移动端布局（Android / iOS）：侧边栏变底部导航 ---------- */
+@media (max-width: 820px) {
+  .app {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    order: 2;
+    flex-direction: row;
+    border-right: none;
+    border-top: 1px solid var(--line);
+  }
+
+  .logo,
+  .sidebar-footer {
+    display: none;
+  }
+
+  .nav {
+    flex-direction: row;
+    overflow-x: auto;
+    padding: 4px 6px;
+    gap: 2px;
+  }
+
+  .nav-item {
+    flex-direction: column;
+    gap: 2px;
+    font-size: 11px;
+    padding: 6px 10px;
+    white-space: nowrap;
+    border-radius: 10px;
+  }
+
+  .icon {
+    font-size: 18px;
+  }
+
+  .content {
+    order: 1;
+    padding: 16px 14px 24px;
+  }
 }
 </style>

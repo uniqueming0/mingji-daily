@@ -9,6 +9,9 @@
     "preview": "vite preview",
     "tauri": "tauri",
     "test": "vitest run",
+    "android": "tauri android dev",
+    "android:init": "tauri android init",
+    "android:build": "tauri android build --apk --target aarch64",
     "package": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/package.ps1",
     "publish": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/publish.ps1"
   },

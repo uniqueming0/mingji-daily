@@ -15,17 +15,32 @@ use tauri::{Manager, State};
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     install_panic_hook();
-    tauri::Builder::default()
+    let builder = tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
-        .plugin(tauri_plugin_dialog::init())
-        .plugin(tauri_plugin_updater::Builder::new().build())
+        .plugin(tauri_plugin_dialog::init());
+
+    // 自动更新仅桌面端可用（移动端走应用商店/侧载更新）
+    #[cfg(desktop)]
+    let builder = builder.plugin(tauri_plugin_updater::Builder::new().build());
+
+    builder
         .setup(|app| {
+            // 移动端：使用应用私有数据目录（Android/iOS 沙盒）
+            #[cfg(mobile)]
+            {
+                let dir = app.path().app_data_dir().map_err(|e| e.to_string())?;
+                std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+                db::set_data_dir(dir);
+            }
             let db = db::init()?;
-            // 允许前端通过 asset 协议访问数据目录中的媒体文件（照片/视频）
-            let data_dir = db::resolve_data_dir();
-            app.asset_protocol_scope()
-                .allow_directory(&data_dir, true)
-                .map_err(|e| e.to_string())?;
+            // asset 协议仅桌面端可用：允许前端访问数据目录中的媒体文件
+            #[cfg(desktop)]
+            {
+                let data_dir = db::resolve_data_dir();
+                app.asset_protocol_scope()
+                    .allow_directory(&data_dir, true)
+                    .map_err(|e| e.to_string())?;
+            }
             app.manage(db);
             Ok(())
         })
@@ -67,6 +82,7 @@ pub fn run() {
             get_app_info,
             get_pending_crash,
             dismiss_pending_crash,
+            get_platform,
             ai::get_ai_config,
             ai::set_ai_config,
             ai::test_ai_connection,
@@ -1497,6 +1513,11 @@ fn dismiss_pending_crash() -> Result<(), String> {
         }
     }
     Ok(())
+}
+
+#[tauri::command]
+fn get_platform() -> String {
+    std::env::consts::OS.to_string()
 }
 
 #[tauri::command]

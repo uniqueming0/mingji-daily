@@ -84,6 +84,8 @@ export const api = {
   aiParseLines: (lines: string[]) => invoke<AiParsedLine[]>("ai_parse_lines", { lines }),
   aiGenerate: (feature: string, cycles: CycleRange[]) =>
     invoke<string>("ai_generate", { feature, cycles }),
+
+  getPlatform: () => invoke<string>("get_platform"),
 };
 
 /** 本地文件路径 → 可被 <img>/<video> 使用的 asset 协议 URL */
