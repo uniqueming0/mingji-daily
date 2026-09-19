@@ -3,7 +3,7 @@ import { computed, onMounted, ref } from "vue";
 import { open } from "@tauri-apps/plugin-dialog";
 import { api } from "../api";
 import { toast } from "../toast";
-import { childrenOf, store, topCategories } from "../store";
+import { appEnv, childrenOf, store, topCategories } from "../store";
 import { todayStr } from "../utils/format";
 import { isPhoto, isVideo } from "../utils/media";
 import type { BillType, Category } from "../types";
@@ -232,7 +232,7 @@ async function save() {
             <button type="button" class="x" @click="removePending(i)">✕</button>
           </span>
         </div>
-        <button type="button" class="btn btn-ghost attach" @click="pickFiles">📎 添加照片 / 视频</button>
+        <button v-if="!appEnv.isMobile" type="button" class="btn btn-ghost attach" @click="pickFiles">📎 添加照片 / 视频</button>
       </div>
 
       <button class="btn btn-primary submit" type="submit" :disabled="saving">

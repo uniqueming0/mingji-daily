@@ -4,7 +4,7 @@ import { open } from "@tauri-apps/plugin-dialog";
 import mammoth from "mammoth";
 import { api } from "../api";
 import { toast } from "../toast";
-import { aiConfig, childrenOf, refreshAiConfig, store, topCategories } from "../store";
+import { aiConfig, appEnv, childrenOf, refreshAiConfig, store, topCategories } from "../store";
 import {
   applyCustomRule,
   extractYearRangeFromText,
@@ -159,6 +159,8 @@ const okCount = computed(() => rows.value.filter((r) => r.ok).length);
 onMounted(() => {
   loadTasks();
   refreshAiConfig();
+  // 移动端无本地文件选择器路径（content:// URI），默认走粘贴文本
+  if (appEnv.isMobile) mode.value = "paste";
 });
 
 async function loadTasks() {
@@ -341,7 +343,14 @@ async function revoke(task: ImportTask) {
     <h1>导入</h1>
 
     <div class="mode card">
-      <button class="chip" :class="{ active: mode === 'file' }" @click="mode = 'file'">选择文件</button>
+      <button
+        v-if="!appEnv.isMobile"
+        class="chip"
+        :class="{ active: mode === 'file' }"
+        @click="mode = 'file'"
+      >
+        选择文件
+      </button>
       <button class="chip" :class="{ active: mode === 'paste' }" @click="mode = 'paste'">粘贴文本</button>
       <span class="hint">
         支持 txt / md（≤1MB）、docx（≤5MB）；旧版 .doc 请另存为 .docx。
@@ -349,7 +358,7 @@ async function revoke(task: ImportTask) {
       </span>
     </div>
 
-    <div v-if="mode === 'file'" class="card">
+    <div v-if="mode === 'file' && !appEnv.isMobile" class="card">
       <button class="btn btn-primary" :disabled="parsing" @click="pickFile">
         {{ parsing ? "解析中…" : "选择账单文件" }}
       </button>

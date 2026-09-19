@@ -4,6 +4,7 @@ import { openPath, openUrl } from "@tauri-apps/plugin-opener";
 import { check } from "@tauri-apps/plugin-updater";
 import { api } from "../api";
 import { toast } from "../toast";
+import { appEnv } from "../store";
 import CategoriesView from "./CategoriesView.vue";
 import AccountsView from "./AccountsView.vue";
 import CycleRulesView from "./CycleRulesView.vue";
@@ -78,8 +79,8 @@ async function checkUpdate() {
 
     <div v-if="tab === 'general'" class="card general">
       <p><b>数据目录：</b>{{ dataDir || "加载中…" }}</p>
-      <button class="btn btn-ghost" @click="openDataDir">打开数据目录</button>
-      <button class="btn btn-ghost" :disabled="checkingUpdate" @click="checkUpdate">
+      <button v-if="!appEnv.isMobile" class="btn btn-ghost" @click="openDataDir">打开数据目录</button>
+      <button v-if="!appEnv.isMobile" class="btn btn-ghost" :disabled="checkingUpdate" @click="checkUpdate">
         {{ checkingUpdate ? "检查中…" : "检查更新" }}
       </button>
       <button class="btn btn-ghost" @click="showFeedback = true">意见反馈</button>

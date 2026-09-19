@@ -3,7 +3,7 @@ import { computed, onMounted, ref } from "vue";
 import { open } from "@tauri-apps/plugin-dialog";
 import { api, mediaSrc } from "../api";
 import { toast } from "../toast";
-import { childrenOf, store, topCategories } from "../store";
+import { appEnv, childrenOf, store, topCategories } from "../store";
 import { isPhoto, isVideo } from "../utils/media";
 import type { Bill, BillType, Media } from "../types";
 
@@ -169,7 +169,7 @@ async function del() {
         <input v-model="remark" type="text" maxlength="100" placeholder="选填" />
       </label>
 
-      <div class="field">
+      <div v-if="!appEnv.isMobile" class="field">
         <span>照片 / 视频（{{ media.length }}，照片最多 9 张、视频最多 1 个）</span>
         <div v-if="media.length" class="media-grid">
           <div v-for="m in media" :key="m.id" class="media-item">

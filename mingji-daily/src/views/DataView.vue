@@ -3,6 +3,7 @@ import { onMounted, ref } from "vue";
 import { open, save } from "@tauri-apps/plugin-dialog";
 import { api } from "../api";
 import { toast } from "../toast";
+import { appEnv } from "../store";
 import type { BackupInfo } from "../types";
 
 const integrity = ref("");
@@ -184,7 +185,7 @@ async function migrateDir() {
       <p v-else class="hint">暂无备份。恢复备份后请重启应用。</p>
     </div>
 
-    <div class="card">
+    <div v-if="!appEnv.isMobile" class="card">
       <div class="sec-head"><h2>导出</h2></div>
       <div class="btn-row">
         <button class="btn btn-primary" @click="exportCsv">导出账单 CSV</button>
@@ -205,7 +206,7 @@ async function migrateDir() {
       <p v-else class="hint">孤儿文件 = 未被任何账单引用的媒体文件（异常残留），可安全清理。</p>
     </div>
 
-    <div class="card">
+    <div v-if="!appEnv.isMobile" class="card">
       <div class="sec-head"><h2>数据目录迁移</h2></div>
       <div class="btn-row">
         <button class="btn btn-ghost" @click="migrateDir">迁移到新目录</button>
