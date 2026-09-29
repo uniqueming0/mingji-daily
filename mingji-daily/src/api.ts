@@ -86,6 +86,7 @@ export const api = {
     invoke<string>("ai_generate", { feature, cycles }),
 
   getPlatform: () => invoke<string>("get_platform"),
+  openDataDir: () => invoke<void>("open_data_dir"),
 };
 
 /** 本地文件路径 → 可被 <img>/<video> 使用的 asset 协议 URL */

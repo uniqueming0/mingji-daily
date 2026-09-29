@@ -83,6 +83,7 @@ pub fn run() {
             get_pending_crash,
             dismiss_pending_crash,
             get_platform,
+            open_data_dir,
             ai::get_ai_config,
             ai::set_ai_config,
             ai::test_ai_connection,
@@ -515,6 +516,20 @@ fn validate_cycle_input(input: &CycleRuleInput) -> Result<(), String> {
             }
             if !["day", "week", "month"].contains(&input.length_unit.as_str()) {
                 return Err("周期单位无效".into());
+            }
+        }
+        "range" => {
+            // 固定区间（长周期）：必须填写终止日期，且不早于起始日期
+            let end = input
+                .end_date
+                .as_ref()
+                .filter(|s| !s.is_empty())
+                .ok_or("固定区间周期必须填写终止日期")?;
+            if end.len() != 10 {
+                return Err("终止日期无效".into());
+            }
+            if end < &input.start_date {
+                return Err("终止日期不能早于起始日期".into());
             }
         }
         _ => return Err("周期类型无效".into()),
@@ -1518,6 +1533,42 @@ fn dismiss_pending_crash() -> Result<(), String> {
 #[tauri::command]
 fn get_platform() -> String {
     std::env::consts::OS.to_string()
+}
+
+/// 用系统文件管理器打开数据目录
+/// （走 Rust 侧调用，避免前端 opener 插件的路径 scope 权限限制）
+#[tauri::command]
+fn open_data_dir() -> Result<(), String> {
+    let dir = db::resolve_data_dir();
+    if !dir.exists() {
+        std::fs::create_dir_all(&dir).map_err(|e| format!("无法创建数据目录：{}", e))?;
+    }
+    #[cfg(target_os = "windows")]
+    {
+        std::process::Command::new("explorer")
+            .arg(dir.as_os_str())
+            .spawn()
+            .map_err(|e| format!("打开数据目录失败：{}", e))?;
+        return Ok(());
+    }
+    #[cfg(target_os = "macos")]
+    {
+        std::process::Command::new("open")
+            .arg(dir.as_os_str())
+            .spawn()
+            .map_err(|e| format!("打开数据目录失败：{}", e))?;
+        return Ok(());
+    }
+    #[cfg(all(unix, not(target_os = "macos")))]
+    {
+        std::process::Command::new("xdg-open")
+            .arg(dir.as_os_str())
+            .spawn()
+            .map_err(|e| format!("打开数据目录失败：{}", e))?;
+        return Ok(());
+    }
+    #[allow(unreachable_code)]
+    Ok(())
 }
 
 #[tauri::command]

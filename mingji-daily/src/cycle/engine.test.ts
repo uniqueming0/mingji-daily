@@ -86,4 +86,35 @@ describe("周期引擎", () => {
     expect(describeRule(base({ type: "month", month_start_day: 25 }))).toContain("25 日");
     expect(describeRule(base({ type: "custom", length: 3, length_unit: "week" }))).toContain("每 3 周");
   });
+
+  it("固定区间（长周期）：单一区间、不循环", () => {
+    const rule = base({ type: "range", start_date: "2025-01-01", end_date: "2025-06-30" });
+    const list = expandInstances(rule, "2025-03-01", "2025-03-31");
+    expect(list).toHaveLength(1);
+    expect(list[0]).toMatchObject({ start: "2025-01-01", end: "2025-06-30" });
+  });
+
+  it("固定区间：区间外不产生实例", () => {
+    const rule = base({ type: "range", start_date: "2025-01-01", end_date: "2025-06-30" });
+    expect(expandInstances(rule, "2025-07-01", "2025-12-31")).toHaveLength(0);
+    expect(expandInstances(rule, "2024-01-01", "2024-12-31")).toHaveLength(0);
+  });
+
+  it("固定区间：包含判定与跨年区间", () => {
+    const rule = base({ type: "range", start_date: "2025-10-01", end_date: "2026-03-31" });
+    expect(instanceContaining(rule, "2026-01-15")?.start).toBe("2025-10-01");
+    expect(instanceContaining(rule, "2026-01-15")?.end).toBe("2026-03-31");
+    expect(instanceContaining(rule, "2026-04-01")).toBeNull();
+  });
+
+  it("固定区间：缺少终止日期时不产生实例", () => {
+    const rule = base({ type: "range", start_date: "2025-01-01", end_date: null });
+    expect(expandInstances(rule, "2025-01-01", "2025-12-31")).toHaveLength(0);
+  });
+
+  it("固定区间描述文案", () => {
+    expect(
+      describeRule(base({ type: "range", start_date: "2025-01-01", end_date: "2025-06-30" }))
+    ).toContain("固定区间");
+  });
 });

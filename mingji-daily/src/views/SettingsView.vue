@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
-import { openPath, openUrl } from "@tauri-apps/plugin-opener";
+import { openUrl } from "@tauri-apps/plugin-opener";
 import { check } from "@tauri-apps/plugin-updater";
 import { api } from "../api";
 import { toast } from "../toast";
@@ -31,9 +31,8 @@ function fmtMB(bytes: number): string {
 }
 
 async function openDataDir() {
-  if (!dataDir.value) return;
   try {
-    await openPath(dataDir.value);
+    await api.openDataDir();
   } catch (e) {
     toast.error(String(e));
   }

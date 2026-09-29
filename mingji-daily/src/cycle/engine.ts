@@ -5,7 +5,7 @@
 // - 月起始日仅支持 1~28 日，天然规避 29/30/31 日的短月顺延问题
 // =============================================================
 
-export type CycleRuleType = "week" | "month" | "custom";
+export type CycleRuleType = "week" | "month" | "custom" | "range";
 export type LengthUnit = "day" | "week" | "month";
 
 export interface CycleRule {
@@ -96,6 +96,15 @@ export function expandInstances(
   if (rule.status === 0 || rangeStart > rangeEnd) return [];
   const out: CycleInstance[] = [];
 
+  // 固定区间（长周期）：start_date ~ end_date 视为单一区间，不循环
+  if (rule.type === "range") {
+    const s = rule.start_date;
+    const e = rule.end_date ?? "";
+    if (e.length !== 10 || e < s) return [];
+    if (e < rangeStart || s > rangeEnd) return [];
+    return [{ rule_id: rule.id, start: s, end: e, label: `${s} ~ ${e}` }];
+  }
+
   // 锚点 = 包含规则起始日的那个实例的起始日
   let anchorStart: string;
   if (rule.type === "week") anchorStart = weekAnchor(rule.start_date, rule.week_start);
@@ -133,6 +142,11 @@ const WEEK_NAMES = ["", "周一", "周二", "周三", "周四", "周五", "周�
 const UNIT_NAMES: Record<LengthUnit, string> = { day: "天", week: "周", month: "个月" };
 
 export function describeRule(rule: CycleRule): string {
+  if (rule.type === "range") {
+    return rule.end_date
+      ? `固定区间（${rule.start_date} ~ ${rule.end_date}）`
+      : `固定区间（自 ${rule.start_date}）`;
+  }
   if (rule.type === "week") return `按周（${WEEK_NAMES[rule.week_start] || "周一"}起始）`;
   if (rule.type === "month") return `按月（每月 ${rule.month_start_day} 日起）`;
   return `自定义（每 ${rule.length} ${UNIT_NAMES[rule.length_unit]}）`;
@@ -141,7 +155,11 @@ export function describeRule(rule: CycleRule): string {
 /** 预览：从"今天（或规则起始日，取较晚者）所在周期"起的连续 count 个周期 */
 export function previewInstances(draft: CycleRuleDraft, count = 3): CycleInstance[] {
   const today = formatDate(new Date());
-  const anchor = draft.start_date > today ? draft.start_date : today;
   const rule: CycleRule = { ...draft, id: 0, status: 1 };
+  // 固定区间：直接返回该区间本身（无论过去还是未来）
+  if (draft.type === "range") {
+    return expandInstances(rule, draft.start_date, draft.end_date || draft.start_date);
+  }
+  const anchor = draft.start_date > today ? draft.start_date : today;
   return expandInstances(rule, anchor, addMonthsClamped(anchor, 24)).slice(0, count);
 }

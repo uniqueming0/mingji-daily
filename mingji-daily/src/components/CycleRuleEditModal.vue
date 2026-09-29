@@ -20,6 +20,10 @@ const draft = reactive({
   end_date: props.rule?.end_date ?? "",
 });
 const longTerm = ref(props.rule === null || props.rule.end_date === null);
+// 固定区间（长周期）的终止日期
+const rangeEnd = ref(
+  props.rule?.type === "range" ? props.rule?.end_date ?? todayStr() : todayStr()
+);
 const saving = ref(false);
 
 const dateValid = computed(() => /^\d{4}-\d{2}-\d{2}$/.test(draft.start_date));
@@ -36,7 +40,12 @@ const preview = computed(() => {
         length_unit: draft.length_unit,
         week_start: draft.week_start,
         month_start_day: draft.month_start_day,
-        end_date: longTerm.value ? null : draft.end_date || null,
+        end_date:
+          draft.type === "range"
+            ? rangeEnd.value || null
+            : longTerm.value
+              ? null
+              : draft.end_date || null,
       },
       3
     );
@@ -54,6 +63,16 @@ async function save() {
     toast.error("请选择有效的起始日期");
     return;
   }
+  if (draft.type === "range") {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(rangeEnd.value)) {
+      toast.error("请选择区间终止日期");
+      return;
+    }
+    if (rangeEnd.value < draft.start_date) {
+      toast.error("终止日期不能早于起始日期");
+      return;
+    }
+  }
   const input: CycleRuleInput = {
     name: draft.name.trim(),
     type: draft.type,
@@ -62,7 +81,7 @@ async function save() {
     length_unit: draft.length_unit,
     week_start: draft.week_start,
     month_start_day: draft.month_start_day,
-    end_date: longTerm.value ? null : draft.end_date || null,
+    end_date: draft.type === "range" ? rangeEnd.value : longTerm.value ? null : draft.end_date || null,
     status: props.rule ? props.rule.status : 1,
   };
   saving.value = true;
@@ -116,6 +135,14 @@ async function save() {
           >
             自定义
           </button>
+          <button
+            type="button"
+            class="seg-item"
+            :class="{ active: draft.type === 'range' }"
+            @click="draft.type = 'range'"
+          >
+            固定区间
+          </button>
         </div>
       </div>
 
@@ -151,18 +178,27 @@ async function save() {
       </div>
 
       <label class="field">
-        <span>起始日期</span>
+        <span>{{ draft.type === "range" ? "区间起始日期" : "起始日期" }}</span>
         <input v-model="draft.start_date" type="date" />
       </label>
 
-      <label class="field">
-        <span>结束日期</span>
-        <input v-model="draft.end_date" type="date" :disabled="longTerm" />
+      <label v-if="draft.type === 'range'" class="field">
+        <span>区间终止日期（长周期统计的截止日）</span>
+        <input v-model="rangeEnd" type="date" />
       </label>
-      <label class="check"><input v-model="longTerm" type="checkbox" /> 长期有效</label>
+
+      <template v-if="draft.type !== 'range'">
+        <label class="field">
+          <span>结束日期</span>
+          <input v-model="draft.end_date" type="date" :disabled="longTerm" />
+        </label>
+        <label class="check"><input v-model="longTerm" type="checkbox" /> 长期有效</label>
+      </template>
 
       <div class="preview">
-        <div class="pv-title">预览（最近 3 个周期）</div>
+        <div class="pv-title">
+          预览（{{ draft.type === "range" ? "统计区间" : "最近 3 个周期" }}）
+        </div>
         <div v-if="preview.length" class="pv-list">
           <div v-for="p in preview" :key="p.start">{{ p.label }}</div>
         </div>
