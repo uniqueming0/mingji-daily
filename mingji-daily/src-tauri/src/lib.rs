@@ -14,6 +14,16 @@ use tauri::{Manager, State};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    // rustls 0.23 要求显式安装加密后端：桌面端由依赖树自动带上 ring，
+    // 但 Android 的特性解析不同，不安装会在构建 HTTP 客户端时 panic（SIGABRT 闪退）。
+    // 必须在任何 reqwest Client 构建之前执行。
+    if rustls::crypto::ring::default_provider()
+        .install_default()
+        .is_err()
+    {
+        // 已安装过（例如被其他依赖抢先安装）属正常情况，忽略
+    }
+
     install_panic_hook();
     let builder = tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
