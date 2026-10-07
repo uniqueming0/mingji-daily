@@ -11,6 +11,8 @@
     "test": "vitest run",
     "android": "tauri android dev",
     "android:init": "tauri android init",
+    "android:apk": "tauri android build --apk --debug",
+    "android:apk:x64": "tauri android build --apk --debug --target x86_64",
     "android:build": "tauri android build --apk --target aarch64",
     "package": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/package.ps1",
     "publish": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/publish.ps1"
