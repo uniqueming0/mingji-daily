@@ -30,7 +30,8 @@ onMounted(() => {
     selected.value = kids.length ? kids[0].id : selectedTop.value;
   }
   if (!accountId.value) accountId.value = accounts.value[0]?.id ?? 0;
-  amountInput.value?.focus();
+  // 移动端不自动聚焦：否则系统键盘会立刻弹出并遮住下半屏表单（日期/备注/保存）
+  if (!appEnv.isMobile) amountInput.value?.focus();
 });
 
 function pickTop(id: number) {

@@ -375,6 +375,8 @@ async function dismissCrash() {
     order: 1;
     padding: 14px 12px 20px;
     -webkit-overflow-scrolling: touch;
+    /* 键盘弹出时留出滚动余量，保证最后一个字段（保存按钮）能滚到可见处 */
+    scroll-padding-bottom: 32px;
   }
 
   /* 提示气泡在手机上贴顶居中 */
