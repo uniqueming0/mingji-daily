@@ -149,3 +149,117 @@ textarea:focus {
   color: var(--primary);
   font-weight: 600;
 }
+
+/* =============================================================
+   移动端适配（Android / iOS，窄屏 ≤820px）
+   - 触控热区 ≥44px（手指点击才不容易误触）
+   - 输入框 16px 字号（避免系统自动缩放）
+   - 弹窗改为底部抽屉式全屏，并适配安全区
+   ============================================================= */
+@media (max-width: 820px) {
+  body {
+    font-size: 15px;
+  }
+
+  /* ---- 按钮 ---- */
+  .btn {
+    height: 44px;
+    padding: 0 20px;
+    border-radius: 22px;
+    font-size: 15px;
+  }
+
+  .btn-text,
+  .btn-danger-text {
+    height: 40px;
+    padding: 0 10px;
+    font-size: 14px;
+  }
+
+  .btn.small,
+  .small {
+    height: 38px;
+    padding: 0 14px;
+    font-size: 13px;
+    border-radius: 19px;
+  }
+
+  .chip {
+    min-height: 40px;
+    padding: 9px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+  }
+
+  /* ---- 表单控件 ---- */
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+    min-height: 44px;
+    padding: 10px 12px;
+  }
+
+  textarea {
+    min-height: 96px;
+  }
+
+  /* 导入页行内小输入框：手机上放宽，避免挤成一团 */
+  .mini-input {
+    font-size: 15px !important;
+    min-height: 38px !important;
+    padding: 4px 8px !important;
+  }
+
+  /* ---- 卡片与标题 ---- */
+  .card {
+    border-radius: 14px;
+    padding: 14px;
+  }
+
+  h1 {
+    font-size: 20px !important;
+  }
+
+  h2 {
+    font-size: 17px !important;
+  }
+
+  /* 标签栏可横向滑动，避免挤爆 */
+  .tabs {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* ---- 弹窗：底部抽屉 ---- */
+  .overlay,
+  .crash-overlay {
+    align-items: flex-end !important;
+    padding: 0 !important;
+  }
+
+  .modal,
+  .crash-modal {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 92vh;
+    border-radius: 18px 18px 0 0 !important;
+    padding-bottom: calc(18px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  /* 图片/视频查看器铺满屏幕 */
+  .lightbox img,
+  .lightbox video {
+    max-width: 96vw;
+    max-height: 80vh;
+  }
+
+  /* 表格类内容允许横向滚动 */
+  .table-scroll,
+  .rows {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+

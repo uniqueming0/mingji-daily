@@ -318,4 +318,22 @@ async function onDeleted() {
   text-align: right;
   font-weight: 600;
 }
+
+/* ---------- 移动端适配：账单行改为三列，去掉账户列 ---------- */
+@media (max-width: 820px) {
+  .bill-row {
+    grid-template-columns: 80px 1fr auto;
+    gap: 8px;
+    padding: 13px 4px;
+  }
+
+  .bill-row .account {
+    display: none;
+  }
+
+  .bill-row .amount {
+    white-space: nowrap;
+    font-size: 15px;
+  }
+}
 </style>

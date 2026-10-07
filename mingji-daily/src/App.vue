@@ -331,12 +331,14 @@ async function dismissCrash() {
     flex-direction: column;
   }
 
+  /* 侧边栏 → 底部导航栏（7 项平分宽度，无需横向滚动） */
   .sidebar {
     width: 100%;
     order: 2;
     flex-direction: row;
     border-right: none;
     border-top: 1px solid var(--line);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 
   .logo,
@@ -346,27 +348,40 @@ async function dismissCrash() {
 
   .nav {
     flex-direction: row;
-    overflow-x: auto;
-    padding: 4px 6px;
-    gap: 2px;
+    padding: 6px 4px;
+    gap: 0;
   }
 
   .nav-item {
+    flex: 1;
     flex-direction: column;
-    gap: 2px;
-    font-size: 11px;
-    padding: 6px 10px;
-    white-space: nowrap;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    font-size: 10px;
+    padding: 6px 2px;
     border-radius: 10px;
+    text-align: center;
+    min-width: 0;
+    white-space: nowrap;
   }
 
   .icon {
-    font-size: 18px;
+    font-size: 20px;
+    line-height: 1;
   }
 
   .content {
     order: 1;
-    padding: 16px 14px 24px;
+    padding: 14px 12px 20px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* 提示气泡在手机上贴顶居中 */
+  .toasts {
+    left: 12px;
+    right: 12px;
+    align-items: center;
   }
 }
 </style>

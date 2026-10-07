@@ -398,4 +398,58 @@ async function save() {
 .attach {
   align-self: flex-start;
 }
+
+/* ---------- 移动端适配：更大的金额区与分类格子 ---------- */
+@media (max-width: 820px) {
+  .seg-item {
+    max-width: none;
+    height: 46px;
+    border-radius: 23px;
+    font-size: 15px;
+  }
+
+  .amount-row {
+    padding: 10px 0;
+  }
+
+  .currency {
+    font-size: 24px;
+  }
+
+  .amount-input {
+    font-size: 34px;
+    min-height: 52px;
+  }
+
+  /* 分类格子：手机上每行 3~4 个，格子加高便于点击 */
+  .cat-grid {
+    grid-template-columns: repeat(auto-fill, minmax(78px, 1fr));
+    gap: 8px;
+  }
+
+  .cat-cell {
+    min-height: 46px;
+    font-size: 14px;
+    padding: 12px 6px;
+  }
+
+  .form {
+    padding: 14px;
+    gap: 16px;
+  }
+
+  /* 保存按钮铺满一行，拇指好按 */
+  .submit {
+    align-self: stretch;
+    min-width: 0;
+    width: 100%;
+    height: 48px;
+    font-size: 16px;
+  }
+
+  .row {
+    flex-direction: column;
+    gap: 12px;
+  }
+}
 </style>

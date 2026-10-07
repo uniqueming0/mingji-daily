@@ -667,4 +667,32 @@ async function revoke(task: ImportTask) {
 .r-col {
   width: 96px;
 }
+
+/* ---------- 移动端适配：预览表格横向滚动 ---------- */
+@media (max-width: 820px) {
+  .table {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 0 0 6px;
+  }
+
+  .t-head,
+  .t-row {
+    min-width: 720px;
+    padding: 8px 10px;
+  }
+
+  /* 自定义规则行的固定宽度在窄屏下改为自适应 */
+  .r-name,
+  .r-sep,
+  .r-col {
+    width: auto;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .rule-row {
+    flex-wrap: wrap;
+  }
+}
 </style>

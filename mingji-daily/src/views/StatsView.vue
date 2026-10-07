@@ -656,8 +656,7 @@ function drill(c: CatStat, billType: 1 | 2) {
 
 .cmp-row {
   display: flex;
-  align-items: center;
-  gap: 16px;
+  align-items: center;  gap: 16px;
   padding: 8px 0;
   border-bottom: 1px solid var(--line);
 }
@@ -686,5 +685,38 @@ function drill(c: CatStat, billType: 1 | 2) {
 
 .cmp-r.bad {
   color: var(--expense);
+}
+
+/* ---------- 移动端适配 ---------- */
+@media (max-width: 820px) {
+  /* 概览卡片：2 列布局，数字更大更好读 */
+  .cards {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .stat-card .v {
+    font-size: 19px;
+  }
+
+  /* 趋势图与分类排行改为上下堆叠 */
+  .grid2 {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .pie-row {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .pie {
+    width: 200px;
+    height: 200px;
+  }
+
+  .trend {
+    height: 220px;
+  }
 }
 </style>
