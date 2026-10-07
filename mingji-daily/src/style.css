@@ -161,6 +161,18 @@ textarea:focus {
     font-size: 15px;
   }
 
+  /* 防御：任何元素都不应把整页撑得比屏幕宽（避免"要拖动才能看全"） */
+  html,
+  body {
+    overflow-x: hidden;
+    max-width: 100%;
+  }
+
+  #app {
+    width: 100%;
+    overflow-x: hidden;
+  }
+
   /* ---- 按钮 ---- */
   .btn {
     height: 44px;
