@@ -16,6 +16,18 @@ const rule = computed<CycleRule | null>(
   () => enabledRules.value.find((r) => r.id === ruleId.value) ?? enabledRules.value[0] ?? null
 );
 
+// select 的显示值必须与某个 option 匹配：ruleId 为 null 时
+// 桌面浏览器会兜底显示第一项，但 Android WebView 会显示空白，故主动初始化/校正
+watch(
+  enabledRules,
+  (list) => {
+    if (list.length && !list.some((r) => r.id === ruleId.value)) {
+      ruleId.value = list[0].id;
+    }
+  },
+  { immediate: true }
+);
+
 const curIndex = ref(0);
 const showAi = ref(false);
 
@@ -717,6 +729,28 @@ function drill(c: CatStat, billType: 1 | 2) {
 
   .trend {
     height: 220px;
+  }
+
+  /* 周期切换区：手机上行排列，选择框铺满一行 */
+  .head {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .switcher select {
+    width: 100%;
+  }
+
+  .range {
+    min-width: 0;
+    flex: 1;
+    font-size: 12px;
+  }
+
+  /* 概览卡片为奇数张时，最后一张铺满整行，避免右侧留空 */
+  .cards > .stat-card:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
   }
 }
 </style>
