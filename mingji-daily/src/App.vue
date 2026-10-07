@@ -352,6 +352,11 @@ async function dismissCrash() {
     gap: 0;
   }
 
+  /* 底部导航与系统手势条留出间距（env 安全区在部分 WebView 下为 0，故补固定值） */
+  .sidebar {
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 8px);
+  }
+
   .nav-item {
     flex: 1;
     flex-direction: column;

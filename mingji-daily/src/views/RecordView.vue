@@ -225,7 +225,7 @@ async function save() {
         <input v-model="remark" type="text" maxlength="100" placeholder="选填，例如：和朋友聚餐" />
       </div>
 
-      <div class="field">
+      <div v-if="!appEnv.isMobile || pendingFiles.length" class="field">
         <div class="label">照片 / 视频（选填，照片最多 9 张、视频最多 1 个）</div>
         <div v-if="pendingFiles.length" class="chips">
           <span v-for="(f, i) in pendingFiles" :key="i" class="file-chip">
