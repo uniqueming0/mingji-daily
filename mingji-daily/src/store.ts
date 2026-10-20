@@ -64,12 +64,18 @@ export interface BillsNavFilter {
 export const navRequest = reactive({
   seq: 0,
   filter: null as BillsNavFilter | null,
+  /** 来源页：从统计页穿透过来时记录，用于在明细页显示"返回统计" */
+  from: null as "stats" | null,
 });
 
-export function gotoBills(filter: BillsNavFilter) {
+export function gotoBills(filter: BillsNavFilter, from: "stats" | null = null) {
   navRequest.filter = filter;
+  navRequest.from = from;
   navRequest.seq++;
 }
+
+/** 当前激活的页签（放在共享状态里，便于跨页面跳转，如"返回统计"） */
+export const ui = reactive({ active: "记一笔" });
 
 export function categoryName(id: number): string {
   return store.categories.find((c) => c.id === id)?.name ?? "未分类";

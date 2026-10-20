@@ -30,23 +30,28 @@ fn save_config(cfg: &AiConfigStore) -> Result<(), String> {
 
 // ---------- DeepSeek 调用 ----------
 
-pub async fn call_deepseek(system: &str, user: &str, max_tokens: u32) -> Result<String, String> {
+/// 通用对话补全：json_mode=true 时要求模型输出 JSON（结构化功能用），
+/// false 时按普通文本回复（AI 自由问答用）
+async fn chat_completion(
+    messages: Vec<Value>,
+    max_tokens: u32,
+    json_mode: bool,
+) -> Result<String, String> {
     let cfg = load_config();
     if cfg.api_key.trim().is_empty() {
         return Err("尚未配置 DeepSeek API Key".into());
     }
     let client = reqwest::Client::new();
-    let body = json!({
+    let mut body = json!({
         "model": cfg.model,
-        "messages": [
-            { "role": "system", "content": system },
-            { "role": "user", "content": user }
-        ],
+        "messages": messages,
         "temperature": 0.3,
         "max_tokens": max_tokens,
-        "response_format": { "type": "json_object" },
         "stream": false
     });
+    if json_mode {
+        body["response_format"] = json!({ "type": "json_object" });
+    }
     let resp = client
         .post(API_URL)
         .bearer_auth(&cfg.api_key)
@@ -70,6 +75,19 @@ pub async fn call_deepseek(system: &str, user: &str, max_tokens: u32) -> Result<
         .as_str()
         .map(|s| s.to_string())
         .ok_or_else(|| "AI 返回内容格式异常".to_string())
+}
+
+/// 结构化功能用（周期报告/省钱/饮食/导入解析）：要求模型输出 JSON
+pub async fn call_deepseek(system: &str, user: &str, max_tokens: u32) -> Result<String, String> {
+    chat_completion(
+        vec![
+            json!({ "role": "system", "content": system }),
+            json!({ "role": "user", "content": user }),
+        ],
+        max_tokens,
+        true,
+    )
+    .await
 }
 
 fn truncate(s: &str, n: usize) -> String {
@@ -197,7 +215,12 @@ pub fn aggregate_cycles(conn: &Connection, cycles: &[CycleRange]) -> Result<Vec<
         }
 
         let total_days = date_diff_days(&c.start, &c.end).max(1);
-        let avg_daily = (expense as f64 / total_days as f64 / 100.0 * 100.0).round() / 100.0;
+        // 日均按"有记账的天数"计算（与界面口径一致），避免只记几天也被整周期摊薄
+        let avg_daily = if recorded_days > 0 {
+            (expense as f64 / recorded_days as f64 * 100.0).round() / 100.0
+        } else {
+            0.0
+        };
         out.push(json!({
             "label": format!("{} ~ {}", c.start, c.end),
             "days": total_days,
@@ -329,4 +352,46 @@ pub async fn ai_generate(
     };
     let user = serde_json::to_string(&aggregated).map_err(|e| e.to_string())?;
     call_deepseek(system, &user, max_tokens).await
+}
+
+// ---------- AI 自由对话 ----------
+
+const CHAT_SYSTEM: &str = "你是记账应用「铭记日常」的智能助手。用户会就自己的记账与消费提问，请结合下面提供的账单聚合数据作答。要求：\n1) 用中文、口语化、条理清晰（可用短列表或分点）；\n2) 引用数字时必须与提供的数据一致，不确定就说不知道，不要编造；\n3) 不提供投资、借贷、医疗诊断类建议，不承诺收益；\n4) 金额单位为人民币元；\n5) 回答尽量控制在 300 字以内，先给结论再给理由。";
+
+#[derive(serde::Deserialize)]
+pub struct ChatMessage {
+    pub role: String,
+    pub content: String,
+}
+
+#[tauri::command]
+pub async fn ai_chat(
+    state: tauri::State<'_, crate::db::Db>,
+    messages: Vec<ChatMessage>,
+    cycles: Vec<CycleRange>,
+) -> Result<String, String> {
+    let cfg = load_config();
+    if !cfg.enabled {
+        return Err("AI 功能未开启（设置 → AI 智能服务）".into());
+    }
+    if messages.is_empty() {
+        return Err("请输入问题".into());
+    }
+    // 账单聚合作为上下文（隐私：只传统计口径，不含备注原文）
+    let aggregated = {
+        let db: &crate::db::Db = &state;
+        let conn = db.0.lock().map_err(|e| e.to_string())?;
+        aggregate_cycles(&conn, &cycles)?
+    };
+    let ctx = serde_json::to_string(&aggregated).map_err(|e| e.to_string())?;
+    let system = format!("{}\n\n【用户账单聚合数据（JSON 数组，按周期）】\n{}", CHAT_SYSTEM, ctx);
+
+    let mut msgs: Vec<Value> = vec![json!({ "role": "system", "content": system })];
+    // 只保留最近 12 条对话，避免上下文过长
+    let start = messages.len().saturating_sub(12);
+    for m in &messages[start..] {
+        let role = if m.role == "assistant" { "assistant" } else { "user" };
+        msgs.push(json!({ "role": role, "content": m.content.clone() }));
+    }
+    chat_completion(msgs, 1024, false).await
 }

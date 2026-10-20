@@ -149,3 +149,9 @@ export interface CycleRange {
   start: string;
   end: string;
 }
+
+/** AI 自由对话的消息（role 只有 user / assistant） */
+export interface AiChatMessage {
+  role: "user" | "assistant";
+  content: string;
+}

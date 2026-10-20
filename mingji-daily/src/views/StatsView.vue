@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { computed, onActivated, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import * as echarts from "echarts";
 import { api } from "../api";
 import { toast } from "../toast";
@@ -116,9 +116,11 @@ function dateDiffDays(start: string, end: string): number {
 }
 
 const totalDays = computed(() => (inst.value ? dateDiffDays(inst.value.start, inst.value.end) : 0));
-const avgDaily = computed(() =>
-  totalDays.value ? Math.round(summary.value.expense / totalDays.value) : 0
-);
+// 日均支出 = 总支出 ÷ 有记账的天数（不是周期总天数，避免"只记了 10 天也被 30 天摊薄"）
+const avgDaily = computed(() => {
+  const days = summary.value.recordedDays;
+  return days > 0 ? Math.round(summary.value.expense / days) : 0;
+});
 
 function ratio(cur: number, prev: number): number | null {
   if (prev === 0) return null;
@@ -207,7 +209,9 @@ const trendData = computed(() => {
       ).padStart(2, "0")}`;
     }
   }
-  const avg = values.length ? values.reduce((s, v) => s + v, 0) / values.length : 0;
+  // 均值线同样按"有记账的天数"计算，与概览卡片的口径保持一致
+  const recDays = summary.value.recordedDays;
+  const avg = recDays > 0 ? Math.round(summary.value.expense / 100 / recDays) : 0;
   return { labels, values, avg };
 });
 
@@ -298,6 +302,12 @@ onMounted(() => {
   renderTrend();
   window.addEventListener("resize", onResize);
 });
+// KeepAlive 缓存后重新显示时刷新数据（例如在明细页改了账单再回来）
+onActivated(() => {
+  load();
+  renderPie();
+  renderTrend();
+});
 onBeforeUnmount(() => {
   window.removeEventListener("resize", onResize);
   pieChart?.dispose();
@@ -307,12 +317,15 @@ onBeforeUnmount(() => {
 // ---------- 明细穿透 ----------
 function drill(c: CatStat, billType: 1 | 2) {
   if (!inst.value) return;
-  gotoBills({
-    category_id: c.id,
-    type: billType,
-    start_date: inst.value.start,
-    end_date: inst.value.end,
-  });
+  gotoBills(
+    {
+      category_id: c.id,
+      type: billType,
+      start_date: inst.value.start,
+      end_date: inst.value.end,
+    },
+    "stats"
+  );
 }
 </script>
 

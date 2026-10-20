@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onActivated, onMounted, ref, watch } from "vue";
 import { api } from "../api";
 import { toast } from "../toast";
-import { accountName, categoryName, childrenOf, navRequest, store, topCategories } from "../store";
+import { accountName, categoryName, childrenOf, navRequest, store, topCategories, ui } from "../store";
 import { currentMonth, fenToYuan, monthRange, shortDate } from "../utils/format";
 import type { Bill, BillFilter, BillType } from "../types";
 import BillEditModal from "../components/BillEditModal.vue";
@@ -17,6 +17,8 @@ const accountId = ref<number | null>(null);
 const keyword = ref("");
 const customRange = ref<{ start: string; end: string } | null>(null);
 const editing = ref<Bill | null>(null);
+/** 是否由统计页穿透而来（显示"返回统计"按钮） */
+const cameFromStats = ref(false);
 
 const tops = computed(() => topCategories());
 const accounts = computed(() => store.accounts.filter((a) => a.status === 1));
@@ -52,7 +54,9 @@ async function load() {
 
 function applyNavFilter() {
   const f = navRequest.filter;
+  cameFromStats.value = navRequest.from === "stats";
   navRequest.filter = null; // 消费掉，避免之后手动进入明细页时重复套用旧筛选
+  navRequest.from = null;
   if (!f) return;
   customRange.value =
     f.start_date && f.end_date ? { start: f.start_date, end: f.end_date } : null;
@@ -65,6 +69,10 @@ function applyNavFilter() {
 onMounted(() => {
   // 明细页可能是被统计页"穿透"触发后才挂载的，挂载时先消费一次筛选
   applyNavFilter();
+  load();
+});
+// KeepAlive 缓存后重新显示时刷新（例如在记一笔页新增账单后回来）
+onActivated(() => {
   load();
 });
 watch([month, allTime, typeFilter, categoryId, accountId, customRange], load);
@@ -105,6 +113,12 @@ function dayIncome(items: Bill[]) {
   return items.filter((b) => b.type === 2).reduce((s, b) => s + b.amount, 0);
 }
 
+function backToStats() {
+  cameFromStats.value = false;
+  // 统计页由 KeepAlive 缓存，返回后仍是之前选中的周期
+  ui.active = "统计";
+}
+
 async function onSaved() {
   editing.value = null;
   await load();
@@ -118,7 +132,12 @@ async function onDeleted() {
 
 <template>
   <div class="bills">
-    <h1>明细</h1>
+    <div class="head-row">
+      <h1>明细</h1>
+      <button v-if="cameFromStats" class="btn btn-ghost small" @click="backToStats">
+        ← 返回统计
+      </button>
+    </div>
 
     <div class="filters card">
       <div class="seg">
@@ -185,9 +204,21 @@ async function onDeleted() {
 </template>
 
 <style scoped>
+/* 标题行：标题 + "返回统计"按钮 */
+.head-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
 .bills h1 {
   font-size: 24px;
   margin-bottom: 16px;
+}
+
+.head-row h1 {
+  margin-bottom: 0;
 }
 
 .filters {

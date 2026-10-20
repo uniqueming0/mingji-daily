@@ -1,6 +1,7 @@
 import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 import type {
   Account,
+  AiChatMessage,
   AiConfig,
   AiParsedLine,
   AppInfo,
@@ -84,6 +85,8 @@ export const api = {
   aiParseLines: (lines: string[]) => invoke<AiParsedLine[]>("ai_parse_lines", { lines }),
   aiGenerate: (feature: string, cycles: CycleRange[]) =>
     invoke<string>("ai_generate", { feature, cycles }),
+  aiChat: (messages: AiChatMessage[], cycles: CycleRange[]) =>
+    invoke<string>("ai_chat", { messages, cycles }),
 
   getPlatform: () => invoke<string>("get_platform"),
   openDataDir: () => invoke<void>("open_data_dir"),

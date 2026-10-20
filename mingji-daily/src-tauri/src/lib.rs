@@ -98,7 +98,8 @@ pub fn run() {
             ai::set_ai_config,
             ai::test_ai_connection,
             ai::ai_parse_lines,
-            ai::ai_generate
+            ai::ai_generate,
+            ai::ai_chat
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application")

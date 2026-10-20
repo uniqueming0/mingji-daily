@@ -3,21 +3,61 @@ import { ref } from "vue";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { api } from "../api";
 import { toast } from "../toast";
-import type { CycleRange } from "../types";
+import type { AiChatMessage, CycleRange } from "../types";
 
 const props = defineProps<{ cycles: CycleRange[] }>();
 const emit = defineEmits<{ close: [] }>();
 
-type Tab = "report" | "savings" | "food";
+type Tab = "report" | "savings" | "food" | "chat";
 const tab = ref<Tab>("report");
 const generating = ref(false);
 const result = ref<any>(null);
 const error = ref("");
 
+// ---------- 自由对话 ----------
+const chatMessages = ref<AiChatMessage[]>([]);
+const chatInput = ref("");
+const chatBusy = ref(false);
+const chatBox = ref<HTMLDivElement | null>(null);
+
+const quickAsks = [
+  "我这个周期哪方面花得最多？",
+  "帮我看看哪里可以少花点",
+  "我的饮食支出合理吗？",
+  "怎么养成坚持记账的习惯？",
+];
+
+async function sendChat() {
+  const text = chatInput.value.trim();
+  if (!text || chatBusy.value) return;
+  chatMessages.value.push({ role: "user", content: text });
+  chatInput.value = "";
+  chatBusy.value = true;
+  try {
+    const reply = await api.aiChat(chatMessages.value.slice(-12), props.cycles);
+    chatMessages.value.push({ role: "assistant", content: reply || "（无回复）" });
+  } catch (e) {
+    chatMessages.value.push({ role: "assistant", content: `抱歉，出错了：${String(e)}` });
+  } finally {
+    chatBusy.value = false;
+    // 滚动到底部
+    requestAnimationFrame(() => {
+      const el = chatBox.value;
+      if (el) el.scrollTop = el.scrollHeight;
+    });
+  }
+}
+
+function quickAsk(q: string) {
+  chatInput.value = q;
+  sendChat();
+}
+
 const tabs: Array<{ key: Tab; label: string; icon: string }> = [
   { key: "report", label: "周期报告", icon: "📊" },
   { key: "savings", label: "省钱建议", icon: "💰" },
   { key: "food", label: "饮食推荐", icon: "🍽️" },
+  { key: "chat", label: "问 AI", icon: "💬" },
 ];
 
 async function generate() {
@@ -71,13 +111,55 @@ function feedback(useful: boolean) {
         </button>
       </div>
 
-      <button class="btn btn-primary" :disabled="generating" @click="generate">
+      <button
+        v-if="tab !== 'chat'"
+        class="btn btn-primary"
+        :disabled="generating"
+        @click="generate"
+      >
         {{ generating ? "生成中，请稍候（约 5~15 秒）…" : "开始生成" }}
       </button>
 
       <p v-if="error" class="error">⚠️ {{ error }}</p>
 
-      <div v-if="result" class="result">
+      <!-- 自由对话 -->
+      <div v-if="tab === 'chat'" class="chat">
+        <div ref="chatBox" class="chat-box">
+          <div v-if="!chatMessages.length" class="chat-empty">
+            <p>💬 可以问我任何关于你记账的问题，例如：</p>
+            <div class="quick">
+              <button v-for="q in quickAsks" :key="q" class="chip" @click="quickAsk(q)">
+                {{ q }}
+              </button>
+            </div>
+          </div>
+          <div
+            v-for="(m, i) in chatMessages"
+            :key="i"
+            class="msg"
+            :class="m.role === 'user' ? 'mine' : 'ai'"
+          >
+            <div class="bubble">{{ m.content }}</div>
+          </div>
+          <div v-if="chatBusy" class="msg ai">
+            <div class="bubble typing">思考中…</div>
+          </div>
+        </div>
+        <div class="chat-input">
+          <input
+            v-model="chatInput"
+            type="text"
+            placeholder="输入你想问的问题…（回车发送）"
+            :disabled="chatBusy"
+            @keyup.enter="sendChat"
+          />
+          <button class="btn btn-primary" :disabled="chatBusy || !chatInput.trim()" @click="sendChat">
+            发送
+          </button>
+        </div>
+      </div>
+
+      <div v-if="result && tab !== 'chat'" class="result">
         <!-- 周期报告 -->
         <template v-if="tab === 'report'">
           <h3>{{ result.title }}</h3>
@@ -258,5 +340,80 @@ function feedback(useful: boolean) {
   font-size: 11px;
   color: var(--text-3);
   line-height: 1.6;
+}
+
+/* ---------- 自由对话 ---------- */
+.chat {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.chat-box {
+  max-height: 46vh;
+  min-height: 220px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 4px 2px;
+}
+
+.chat-empty {
+  color: var(--text-2);
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.quick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.msg {
+  display: flex;
+}
+
+.msg.mine {
+  justify-content: flex-end;
+}
+
+.bubble {
+  max-width: 82%;
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-size: 13px;
+  line-height: 1.75;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.msg.mine .bubble {
+  background: var(--primary);
+  color: #fff;
+  border-bottom-right-radius: 4px;
+}
+
+.msg.ai .bubble {
+  background: var(--bg);
+  color: var(--text-1);
+  border-bottom-left-radius: 4px;
+}
+
+.bubble.typing {
+  color: var(--text-3);
+}
+
+.chat-input {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.chat-input input {
+  flex: 1;
 }
 </style>

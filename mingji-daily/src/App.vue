@@ -2,7 +2,7 @@
 import { computed, onMounted, ref, watch, type Component } from "vue";
 import { check, type Update } from "@tauri-apps/plugin-updater";
 import { api } from "./api";
-import { appEnv, bootstrap, loadPlatform, navRequest, store } from "./store";
+import { appEnv, bootstrap, loadPlatform, navRequest, store, ui } from "./store";
 import { toast, toasts } from "./toast";
 import { copyText } from "./utils/clipboard";
 import RecordView from "./views/RecordView.vue";
@@ -29,16 +29,16 @@ const nav: NavItem[] = [
   { name: "帮助", icon: "❓", comp: HelpView },
 ];
 
-const active = ref("记一笔");
 const crashReport = ref<string | null>(null);
 const updateInfo = ref<{ version: string } | null>(null);
-const current = computed(() => nav.find((n) => n.name === active.value)?.comp);
+// 页签状态放在 store（ui.active），便于其他页面跳转（如明细页"返回统计"）
+const current = computed(() => nav.find((n) => n.name === ui.active)?.comp);
 
 // 统计页穿透 → 切到明细页
 watch(
   () => navRequest.seq,
   () => {
-    if (navRequest.seq > 0) active.value = "明细";
+    if (navRequest.seq > 0) ui.active = "明细";
   }
 );
 
@@ -119,8 +119,8 @@ async function dismissCrash() {
           v-for="item in nav"
           :key="item.name"
           class="nav-item"
-          :class="{ active: active === item.name }"
-          @click="active = item.name"
+          :class="{ active: ui.active === item.name }"
+          @click="ui.active = item.name"
         >
           <span class="icon">{{ item.icon }}</span>{{ item.name }}
         </button>
@@ -130,7 +130,10 @@ async function dismissCrash() {
 
     <main class="content">
       <div v-if="!store.ready" class="loading">加载中…</div>
-      <component :is="current" v-else />
+      <!-- KeepAlive：切换页签时保留各页面状态（如统计页当前选中的周期） -->
+      <KeepAlive v-else>
+        <component :is="current" />
+      </KeepAlive>
     </main>
 
     <div v-if="crashReport" class="crash-overlay">
