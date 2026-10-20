@@ -71,7 +71,7 @@ async function testConn() {
       <div class="row">
         <div>
           <div class="title">AI 智能服务 <span class="badge">内测</span></div>
-          <div class="desc">智能识别导入账单 + 省钱建议 / 饮食推荐 / 周期报告（自备 DeepSeek Key）</div>
+          <div class="desc">智能识别导入账单 + 省钱建议 / 饮食推荐 / 周期报告 / 自由问答（自备 DeepSeek Key）</div>
         </div>
         <button class="switch" :class="{ on: aiConfig.enabled }" @click="toggleEnabled">
           <span class="dot"></span>
